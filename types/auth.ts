@@ -1,0 +1,23 @@
+import { z } from "zod";
+
+export const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export const signupSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  school: z.string().max(200).optional(),
+});
+
+export const studentLoginSchema = z.object({
+  classCode: z.string().length(4, "Class code must be 4 digits").regex(/^\d{4}$/, "Class code must be 4 digits"),
+  studentId: z.string().uuid(),
+  pin: z.string().length(4, "PIN must be 4 digits").regex(/^\d{4}$/, "PIN must be 4 digits"),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;
+export type SignupInput = z.infer<typeof signupSchema>;
+export type StudentLoginInput = z.infer<typeof studentLoginSchema>;
