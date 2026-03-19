@@ -27,8 +27,8 @@ import { useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, ready: true },
-  { href: "/schedule", label: "Schedule", icon: Calendar, ready: false },
-  { href: "/gradebook", label: "Gradebook", icon: BookOpen, ready: false },
+  { href: "/schedule", label: "Schedule", icon: Calendar, ready: true },
+  { href: "/gradebook", label: "Gradebook", icon: BookOpen, ready: true },
   { href: "/practice", label: "Practice", icon: Brain, ready: false },
   { href: "/economy", label: "Economy", icon: Coins, ready: false },
   { href: "/students", label: "Students", icon: Users, ready: true },
@@ -141,9 +141,13 @@ export default function AppShell({
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">
-        <div className="max-w-6xl mx-auto p-cm-8">
-          {children}
-        </div>
+        {pathname === "/schedule" || pathname === "/gradebook" ? (
+          children
+        ) : (
+          <div className="max-w-6xl mx-auto p-cm-8">
+            {children}
+          </div>
+        )}
       </main>
     </div>
   );

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useClassStore } from "@/stores/class-store";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, BookOpen, Sparkles, Copy, Check } from "lucide-react";
+import { Users, BookOpen, Sparkles, Copy, Check, Calendar } from "lucide-react";
 
 export default function DashboardPage() {
   const { activeClassId } = useClassStore();
@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [todayCode, setTodayCode] = useState<string | null>(null);
   const [generatingCode, setGeneratingCode] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [scheduleSummary, setScheduleSummary] = useState<{ blockCount: number; totalMinutes: number } | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -51,6 +52,41 @@ export default function DashboardPage() {
           setTodayCode(codes[0].code);
         } else {
           setTodayCode(null);
+        }
+
+        // Check for published schedule
+        const { data: schedule } = await supabase
+          .from("schedules")
+          .select("id, published, class_code")
+          .eq("class_id", activeClassId)
+          .eq("date", today)
+          .eq("published", true)
+          .maybeSingle();
+
+        if (schedule) {
+          const { count: blockCount } = await supabase
+            .from("blocks")
+            .select("*", { count: "exact", head: true })
+            .eq("schedule_id", schedule.id);
+
+          const { data: blockDurations } = await supabase
+            .from("blocks")
+            .select("duration_minutes")
+            .eq("schedule_id", schedule.id);
+
+          const totalMinutes = (blockDurations || []).reduce(
+            (sum: number, b: { duration_minutes: number }) => sum + b.duration_minutes,
+            0
+          );
+
+          setScheduleSummary({ blockCount: blockCount || 0, totalMinutes });
+
+          // If schedule has a class code and we don't have one yet, use it
+          if (schedule.class_code && !codes?.length) {
+            setTodayCode(schedule.class_code);
+          }
+        } else {
+          setScheduleSummary(null);
         }
       }
     }
@@ -163,6 +199,27 @@ export default function DashboardPage() {
           >
             {generatingCode ? "Generating..." : "Generate code"}
           </Button>
+        </Card>
+      )}
+
+      {/* Today's Schedule Summary */}
+      {scheduleSummary && (
+        <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border">
+          <div className="flex items-center gap-cm-3">
+            <div className="w-10 h-10 bg-cm-teal-light rounded-cm-button flex items-center justify-center">
+              <Calendar className="h-5 w-5 text-cm-teal" />
+            </div>
+            <div>
+              <h2 className="text-cm-label text-cm-text-primary">
+                Today&apos;s Schedule
+              </h2>
+              <p className="text-cm-body text-cm-text-secondary">
+                {scheduleSummary.blockCount} blocks,{" "}
+                {Math.floor(scheduleSummary.totalMinutes / 60)}h{" "}
+                {scheduleSummary.totalMinutes % 60}m total
+              </p>
+            </div>
+          </div>
         </Card>
       )}
 

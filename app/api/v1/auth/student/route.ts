@@ -89,6 +89,7 @@ export async function POST(request: Request) {
       id: student.id,
       displayName: student.display_name,
       className: cls?.name || "",
+      classId: student.class_id,
       coinBalance: student.coin_balance,
     },
   });

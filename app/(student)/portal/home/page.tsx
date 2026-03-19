@@ -1,21 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PortalShell from "@/components/shared/portal-shell";
 import { Card } from "@/components/ui/card";
-import { BookOpen, Target, Star, Clock } from "lucide-react";
+import { Target } from "lucide-react";
+import CurrentBlock from "@/components/portal/current-block";
+import MyWork from "@/components/portal/my-work";
+import MyGrades from "@/components/portal/my-grades";
+import type { Block } from "@/types/database";
 
 interface StudentData {
   id: string;
   displayName: string;
   className: string;
+  classId: string;
   coinBalance: number;
 }
 
 export default function PortalHomePage() {
   const router = useRouter();
   const [student, setStudent] = useState<StudentData | null>(null);
+  const [blocks, setBlocks] = useState<Block[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem("classmosis_portal");
@@ -29,6 +35,44 @@ export default function PortalHomePage() {
       router.push("/portal");
     }
   }, [router]);
+
+  // Fetch today's published schedule blocks
+  const fetchBlocks = useCallback(async () => {
+    if (!student?.classId) return;
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      const today = new Date().toISOString().split("T")[0];
+
+      const { data: schedule } = await supabase
+        .from("schedules")
+        .select("id")
+        .eq("class_id", student.classId)
+        .eq("date", today)
+        .eq("published", true)
+        .single();
+
+      if (schedule) {
+        const { data: fetchedBlocks } = await supabase
+          .from("blocks")
+          .select("*")
+          .eq("schedule_id", schedule.id)
+          .order("order_index");
+        setBlocks(fetchedBlocks || []);
+      } else {
+        setBlocks([]);
+      }
+    } catch {
+      setBlocks([]);
+    }
+  }, [student?.classId]);
+
+  useEffect(() => {
+    fetchBlocks();
+    // Poll every 30 seconds for schedule updates
+    const interval = setInterval(fetchBlocks, 30000);
+    return () => clearInterval(interval);
+  }, [fetchBlocks]);
 
   const handleLogout = () => {
     localStorage.removeItem("classmosis_portal");
@@ -54,44 +98,16 @@ export default function PortalHomePage() {
       onLogout={handleLogout}
     >
       <div className="space-y-6">
-        {/* Now Section */}
+        {/* Now Section — Live Block View */}
         <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border">
-          <div className="flex items-center gap-cm-3 mb-3">
-            <div className="w-8 h-8 bg-cm-teal-light rounded-cm-badge flex items-center justify-center">
-              <Clock className="h-4 w-4 text-cm-teal" />
-            </div>
-            <span className="text-cm-overline text-cm-text-hint uppercase">Now</span>
-          </div>
-          <p className="text-cm-body text-cm-text-secondary">
-            No active block right now. Check back when class starts!
-          </p>
+          <CurrentBlock blocks={blocks} />
         </Card>
 
         {/* My Work */}
-        <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border">
-          <div className="flex items-center gap-cm-3 mb-3">
-            <div className="w-8 h-8 bg-cm-blue-light rounded-cm-badge flex items-center justify-center">
-              <BookOpen className="h-4 w-4 text-cm-blue" />
-            </div>
-            <span className="text-cm-overline text-cm-text-hint uppercase">My Work</span>
-          </div>
-          <p className="text-cm-body text-cm-text-secondary">
-            Nothing here yet! Your assignments will show up when your teacher adds them.
-          </p>
-        </Card>
+        <MyWork />
 
         {/* My Grades */}
-        <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border">
-          <div className="flex items-center gap-cm-3 mb-3">
-            <div className="w-8 h-8 bg-cm-green-light rounded-cm-badge flex items-center justify-center">
-              <Star className="h-4 w-4 text-cm-green" />
-            </div>
-            <span className="text-cm-overline text-cm-text-hint uppercase">My Grades</span>
-          </div>
-          <p className="text-cm-body text-cm-text-secondary">
-            Your grades and feedback will appear here as you complete work.
-          </p>
-        </Card>
+        <MyGrades />
 
         {/* My Goals */}
         <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border">
