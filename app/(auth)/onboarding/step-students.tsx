@@ -1,166 +1,106 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 import { createClient } from "@/lib/supabase/client";
-import { generatePin, hashPin } from "@/lib/utils/pin";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Copy, Check } from "lucide-react";
-
-interface StudentWithPin {
-  name: string;
-  pin: string;
-}
+import { Upload, Check } from "lucide-react";
+import ImportRosterDialog from "@/components/teacher/import-roster-dialog";
 
 export default function StepStudents() {
   const { classId, nextStep, prevStep } = useOnboardingStore();
-  const [nameInput, setNameInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [createdStudents, setCreatedStudents] = useState<StudentWithPin[]>([]);
-  const [copied, setCopied] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [students, setStudents] = useState<Array<{ id: string; display_name: string }>>([]);
 
-  const handleAddStudents = async () => {
+  const loadStudents = useCallback(async () => {
     if (!classId) return;
-    const names = nameInput
-      .split("\n")
-      .map((n) => n.trim())
-      .filter((n) => n.length > 0);
-
-    if (names.length === 0) return;
-
-    setLoading(true);
-    setError(null);
-
     const supabase = createClient();
-    const studentsWithPins: StudentWithPin[] = [];
+    const { data } = await supabase
+      .from("students")
+      .select("id, display_name")
+      .eq("class_id", classId)
+      .is("archived_at", null)
+      .order("display_name");
+    setStudents(data || []);
+  }, [classId]);
 
-    for (const name of names) {
-      const pin = generatePin();
-      const pinHash = await hashPin(pin);
-
-      const { error: insertError } = await supabase.from("students").insert({
-        class_id: classId,
-        display_name: name,
-        pin_hash: pinHash,
-      });
-
-      if (insertError) {
-        setError(`Failed to add ${name}: ${insertError.message}`);
-        setLoading(false);
-        return;
-      }
-
-      studentsWithPins.push({ name, pin });
-    }
-
-    setCreatedStudents(studentsWithPins);
-    setLoading(false);
-  };
-
-  const handleCopyPins = async () => {
-    const text = createdStudents
-      .map((s) => `${s.name}\t${s.pin}`)
-      .join("\n");
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  useEffect(() => {
+    loadStudents();
+  }, [loadStudents]);
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-cm-section text-cm-text-primary">Add your students</h2>
         <p className="text-cm-body text-cm-text-secondary mt-1">
-          Paste one name per line. PINs are generated automatically.
+          Import from Google Classroom, upload a CSV, or paste names. You can always sync again later.
         </p>
       </div>
 
-      {createdStudents.length === 0 ? (
-        <>
-          <div className="space-y-2">
-            <Label htmlFor="names">Student names (one per line)</Label>
-            <textarea
-              id="names"
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              placeholder={"Emma Rodriguez\nLiam Chen\nSophia Patel\nNoah Williams"}
-              rows={8}
-              className="w-full px-3 py-2 rounded-cm-button border border-cm-border text-cm-body placeholder:text-cm-text-hint focus:outline-none focus:ring-2 focus:ring-cm-teal/30 focus:border-cm-teal resize-none"
-            />
-            <p className="text-cm-caption text-cm-text-hint">
-              {nameInput.split("\n").filter((n) => n.trim()).length} students
+      {/* Current roster count */}
+      {students.length > 0 && (
+        <div className="bg-cm-teal-light border border-cm-teal/20 rounded-cm-card p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Check className="h-4 w-4 text-cm-teal" />
+            <p className="text-cm-body text-cm-teal-dark font-medium">
+              {students.length} student{students.length !== 1 ? "s" : ""} on roster
             </p>
           </div>
-
-          {error && (
-            <p className="text-cm-caption text-cm-coral bg-cm-coral-light p-3 rounded-cm-button">
-              {error}
-            </p>
-          )}
-
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={prevStep} className="rounded-cm-button">
-              Back
-            </Button>
-            <Button
-              onClick={handleAddStudents}
-              disabled={loading || !nameInput.trim()}
-              className="flex-1 bg-cm-teal hover:bg-cm-teal-dark text-white rounded-cm-button"
-            >
-              {loading ? "Adding students..." : "Add students"}
-            </Button>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="bg-cm-teal-light border border-cm-teal/20 rounded-cm-card p-4">
-            <p className="text-cm-body text-cm-teal-dark font-medium mb-1">
-              {createdStudents.length} students added!
-            </p>
-            <p className="text-cm-caption text-cm-teal-dark/80">
-              Copy or print these PINs — they won&apos;t be shown again.
-            </p>
-          </div>
-
-          <div className="border border-cm-border rounded-cm-card overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2 bg-cm-white border-b border-cm-border">
-              <span className="text-cm-caption text-cm-text-hint font-medium uppercase tracking-wider">
-                Student PINs
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopyPins}
-                className="text-cm-caption"
-              >
-                {copied ? (
-                  <><Check className="h-3 w-3 mr-1" /> Copied</>
-                ) : (
-                  <><Copy className="h-3 w-3 mr-1" /> Copy all</>
-                )}
-              </Button>
-            </div>
-            <div className="divide-y divide-cm-border max-h-64 overflow-y-auto">
-              {createdStudents.map((s, i) => (
-                <div key={i} className="flex justify-between px-4 py-2">
-                  <span className="text-cm-body text-cm-text-primary">{s.name}</span>
-                  <span className="text-cm-body font-mono text-cm-purple font-medium">
-                    {s.pin}
-                  </span>
-                </div>
+          <div className="max-h-32 overflow-y-auto">
+            <div className="flex flex-wrap gap-1">
+              {students.map((s) => (
+                <span
+                  key={s.id}
+                  className="text-cm-caption text-cm-teal-dark bg-cm-teal-light px-2 py-0.5 rounded-cm-badge border border-cm-teal/20"
+                >
+                  {s.display_name}
+                </span>
               ))}
             </div>
           </div>
+        </div>
+      )}
 
-          <Button
-            onClick={nextStep}
-            className="w-full bg-cm-teal hover:bg-cm-teal-dark text-white rounded-cm-button"
-          >
-            Next
-          </Button>
-        </>
+      {/* Import button */}
+      <button
+        onClick={() => setImportOpen(true)}
+        className="w-full flex items-center gap-4 p-5 rounded-cm-card border-2 border-dashed border-cm-border hover:border-cm-teal hover:bg-cm-teal-light/10 transition-colors text-left"
+      >
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-cm-button bg-cm-teal-light">
+          <Upload className="h-6 w-6 text-cm-teal" />
+        </div>
+        <div>
+          <p className="text-cm-label font-medium text-cm-text-primary">
+            {students.length > 0 ? "Import more students" : "Import your roster"}
+          </p>
+          <p className="text-cm-caption text-cm-text-hint mt-0.5">
+            Google Classroom, CSV file, or paste names
+          </p>
+        </div>
+      </button>
+
+      <div className="flex gap-3">
+        <Button variant="outline" onClick={prevStep} className="rounded-cm-button">
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          className="flex-1 bg-cm-teal hover:bg-cm-teal-dark text-white rounded-cm-button"
+        >
+          {students.length > 0 ? "Next" : "Skip for now"}
+        </Button>
+      </div>
+
+      {/* Import dialog — same one used in the dashboard */}
+      {classId && (
+        <ImportRosterDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          classId={classId}
+          existingStudents={students}
+          onComplete={loadStudents}
+          showGoogleSync={false}
+        />
       )}
     </div>
   );

@@ -4,12 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import {
   DndContext,
   DragOverlay,
-  closestCenter,
+  rectIntersection,
+  pointerWithin,
   PointerSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
+  type CollisionDetection,
 } from "@dnd-kit/core";
 import { useScheduleStore } from "@/stores/schedule-store";
 import { useClassStore } from "@/stores/class-store";
@@ -29,12 +31,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  BLOCK_COLORS,
   DAY_TYPES,
   formatDuration,
-  type BlockType,
 } from "@/types/schedule";
-import type { Block, DayType } from "@/types/database";
+import type { Block, DayType, Insert } from "@/types/database";
+import { INSERT_CONFIG, type InsertType } from "@/types/schedule";
+import { getBlockDef } from "@/types/block-catalog";
+import { InsertPaletteChip, WoodInsertChip } from "@/components/schedule/wood-block";
 
 export default function SchedulePage() {
   const { activeClassId } = useClassStore();
@@ -99,6 +102,16 @@ export default function SchedulePage() {
   useEffect(() => {
     loadSchedule();
   }, [loadSchedule]);
+
+  // Auto-save every 30 seconds when dirty
+  useEffect(() => {
+    if (!isDirty || !activeClassId || !scheduleId) return;
+    const timer = setInterval(() => {
+      handleSave();
+    }, 30_000);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDirty, activeClassId, scheduleId]);
 
   // Load templates
   useEffect(() => {
@@ -165,6 +178,7 @@ export default function SchedulePage() {
         external_link: b.external_link,
         economy_trigger: b.economy_trigger,
         visible_to_students: b.visible_to_students,
+        inserts: b.inserts || [],
       }));
 
       const res = await fetch(`/api/v1/classes/${activeClassId}/templates`, {
@@ -208,6 +222,20 @@ export default function SchedulePage() {
     setShowTemplates(false);
   };
 
+  // Custom collision detection: prefer insert wells over canvas
+  const collisionDetection: CollisionDetection = (args) => {
+    // First check pointer-within (more precise for nested containers)
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      // Prefer wells over the canvas
+      const wellHit = pointerCollisions.find((c) => String(c.id).startsWith("well-"));
+      if (wellHit) return [wellHit];
+      return pointerCollisions;
+    }
+    // Fallback to rect intersection
+    return rectIntersection(args);
+  };
+
   // DnD handlers
   const handleDragStart = (event: DragStartEvent) => {
     setDragActiveId(event.active.id as string);
@@ -219,17 +247,19 @@ export default function SchedulePage() {
     if (!over) return;
 
     const activeData = active.data.current;
+    const overData = over.data.current;
+    const overId = String(over.id);
 
-    // Drop from library
+    // ─── 1. Block library → canvas ──────────────────────────
     if (activeData?.fromLibrary) {
-      const blockType = activeData.type as BlockType;
-      const config = BLOCK_COLORS[blockType];
+      const blockType = activeData.type as string;
+      const catalogDef = getBlockDef(blockType);
       const newBlock: Block = {
         id: crypto.randomUUID(),
         schedule_id: scheduleId || "",
         type: blockType,
-        label: config.defaultLabel,
-        duration_minutes: config.defaultDuration,
+        label: catalogDef.label,
+        duration_minutes: catalogDef.defaultDurationMin,
         order_index: blocks.length,
         start_time: null,
         notes: null,
@@ -238,13 +268,78 @@ export default function SchedulePage() {
         external_link: null,
         economy_trigger: null,
         visible_to_students: true,
+        inserts: [],
+        is_instructional: catalogDef.isInstructional,
+        non_instructional_message: catalogDef.nonInstructionalMessage,
+        subject_description: catalogDef.subjectDescription || null,
+        student_view_settings: { show_sub_routines_in_full_day: true, student_can_see_ahead: "all", full_day_view_available: true },
+        category: catalogDef.category,
         created_at: new Date().toISOString(),
       };
       addBlock(newBlock);
       return;
     }
 
-    // Reorder within canvas
+    // ─── 2. Insert library → block well ─────────────────────
+    if (activeData?.fromInsertLibrary) {
+      const insertType = activeData.insertType as InsertType;
+      const targetBlockId = overData?.blockId as string | undefined
+        ?? (overId.startsWith("well-") ? overId.replace("well-", "") : null);
+
+      if (!targetBlockId) return;
+
+      const config = INSERT_CONFIG[insertType];
+      const newInsert: Insert = {
+        id: crypto.randomUUID(),
+        type: insertType,
+        label: config.defaultLabel,
+        duration_minutes: config.defaultDuration,
+        order_index: 0,
+        settings: null,
+      };
+      store.addInsert(targetBlockId, newInsert);
+      return;
+    }
+
+    // ─── 3. Reorder/move inserts ────────────────────────────
+    if (activeData?.type === "insert") {
+      const fromBlockId = activeData.blockId as string;
+      const insertId = activeData.insertId as string;
+
+      // Determine target block and position
+      let toBlockId: string | null = null;
+      let toIndex = 0;
+
+      if (overData?.type === "insert") {
+        // Dropped on another insert
+        toBlockId = overData.blockId as string;
+        const targetBlock = blocks.find((b) => b.id === toBlockId);
+        toIndex = targetBlock?.inserts.findIndex((ins) => ins.id === over.id) ?? 0;
+      } else if (overData?.isWell || overId.startsWith("well-")) {
+        // Dropped on a well
+        toBlockId = overData?.blockId as string ?? overId.replace("well-", "");
+        const targetBlock = blocks.find((b) => b.id === toBlockId);
+        toIndex = targetBlock?.inserts.length ?? 0;
+      }
+
+      if (!toBlockId) return;
+
+      if (fromBlockId === toBlockId) {
+        // Reorder within same block
+        const block = blocks.find((b) => b.id === fromBlockId);
+        if (!block) return;
+        const fromIndex = block.inserts.findIndex((ins) => ins.id === insertId);
+        if (fromIndex !== -1 && fromIndex !== toIndex) {
+          store.reorderInserts(fromBlockId, fromIndex, toIndex);
+        }
+      } else {
+        // Move between blocks
+        store.moveInsert(fromBlockId, toBlockId, insertId, toIndex);
+      }
+      return;
+    }
+
+    // ─── 4. Reorder blocks on canvas ────────────────────────
     if (active.id !== over.id) {
       const oldIndex = blocks.findIndex((b) => b.id === active.id);
       const newIndex = blocks.findIndex((b) => b.id === over.id);
@@ -252,6 +347,34 @@ export default function SchedulePage() {
         reorderBlocks(oldIndex, newIndex);
       }
     }
+  };
+
+  // Find the active drag item for the overlay
+  const getDragOverlayContent = () => {
+    if (!dragActiveId) return null;
+    const idStr = String(dragActiveId);
+
+    // Insert from library
+    if (idStr.startsWith("insert-library-")) {
+      const insertType = idStr.replace("insert-library-", "") as InsertType;
+      return <InsertPaletteChip type={insertType} index={0} />;
+    }
+
+    // Insert being moved
+    for (const block of blocks) {
+      const insert = block.inserts?.find((ins) => ins.id === idStr);
+      if (insert) {
+        const idx = block.inserts.indexOf(insert);
+        return <WoodInsertChip insert={insert} index={idx} />;
+      }
+    }
+
+    // Block being dragged (generic)
+    return (
+      <div className="bg-cm-surface shadow-lg rounded-[4px] px-cm-4 py-cm-3 text-cm-body text-cm-text-primary border border-cm-border opacity-90">
+        Moving block...
+      </div>
+    );
   };
 
   const totalMinutes = blocks.reduce((sum, b) => sum + b.duration_minutes, 0);
@@ -428,7 +551,7 @@ export default function SchedulePage() {
       ) : (
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={collisionDetection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
@@ -437,12 +560,8 @@ export default function SchedulePage() {
             <DayCanvas />
             <BlockProperties />
           </div>
-          <DragOverlay>
-            {dragActiveId ? (
-              <div className="bg-cm-surface shadow-lg rounded-cm-button px-cm-4 py-cm-3 text-cm-body text-cm-text-primary border border-cm-border opacity-90">
-                Dragging...
-              </div>
-            ) : null}
+          <DragOverlay dropAnimation={null}>
+            {getDragOverlayContent()}
           </DragOverlay>
         </DndContext>
       )}

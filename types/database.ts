@@ -82,23 +82,19 @@ export interface ClassCode {
   created_at: string;
 }
 
-export type BlockType = "routine" | "academic" | "assessment" | "economy" | "flex" | "rotation";
+// Block type is now a free string — validated against the 44-block catalog in TypeScript
+export type BlockType = string;
 export type DayType = "normal" | "minimum_day" | "testing" | "field_trip" | "assembly" | "substitute";
 export type TimerBehavior = "auto_start" | "manual" | "none";
 
-export type InsertType =
-  | "teacher_instruction"
-  | "reading"
-  | "writing"
-  | "discussion"
-  | "practice"
-  | "exit_ticket"
-  | "video_media"
-  | "group_work"
-  | "independent_work"
-  | "brain_break"
-  | "assessment"
-  | "custom";
+// Insert/sub-routine type is now a free string — validated against the 63-subroutine catalog
+export type InsertType = string;
+
+export interface StudentViewSettings {
+  show_sub_routines_in_full_day: boolean;
+  student_can_see_ahead: "all" | "current_and_next" | "current_only";
+  full_day_view_available: boolean;
+}
 
 export interface Insert {
   id: string;
@@ -107,6 +103,8 @@ export interface Insert {
   duration_minutes: number | null;
   order_index: number;
   settings: Record<string, unknown> | null;
+  supports?: Record<string, boolean> | null;
+  student_view_description?: string | null;
 }
 
 export interface Schedule {
@@ -136,6 +134,11 @@ export interface Block {
   economy_trigger: { coins: number; trigger_type: string } | null;
   visible_to_students: boolean;
   inserts: Insert[];
+  is_instructional: boolean;
+  non_instructional_message: string | null;
+  subject_description: string | null;
+  student_view_settings: StudentViewSettings;
+  category: string | null;
   created_at: string;
 }
 

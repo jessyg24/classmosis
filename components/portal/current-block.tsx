@@ -118,8 +118,8 @@ export default function CurrentBlock({ blocks }: { blocks: Block[] }) {
     );
   }
 
-  const hex = BLOCK_HEX[current.type];
-  const config = BLOCK_COLORS[current.type];
+  const hex = BLOCK_HEX[current.type] || BLOCK_HEX.academic;
+  const config = BLOCK_COLORS[current.type] || BLOCK_COLORS.academic;
   const minutesLeft = current.endMinutes - now;
 
   return (
