@@ -597,6 +597,49 @@ export interface ParentGuardian {
 }
 
 // ============================================================
+// Brain Break Bank + Student Schedule Events
+// ============================================================
+
+export type BrainBreakCategory = "movement" | "breathing" | "dance" | "game" | "stretch" | "mindfulness" | "creative" | "custom";
+
+export interface BrainBreakItem {
+  id: string;
+  title: string;
+  description: string | null;
+  category: BrainBreakCategory;
+  duration_minutes: number;
+  video_url: string | null;
+  is_seed: boolean;
+  contributed_by: string | null;
+  usage_count: number;
+  created_at: string;
+}
+
+export type StudentEventType = "pull_out" | "support" | "therapy" | "enrichment" | "assessment" | "custom";
+
+export interface StudentScheduleEvent {
+  id: string;
+  class_id: string;
+  title: string;
+  description: string | null;
+  event_type: StudentEventType;
+  days_of_week: string[];
+  start_time: string;
+  duration_minutes: number;
+  location: string | null;
+  provider: string | null;
+  active: boolean;
+  created_at: string;
+  assigned_students?: Array<Pick<Student, "id" | "display_name">>;
+}
+
+export interface StudentEventAssignment {
+  id: string;
+  event_id: string;
+  student_id: string;
+}
+
+// ============================================================
 // Subscription / Billing Types (Sprint 7)
 // ============================================================
 

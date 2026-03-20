@@ -11,6 +11,7 @@ import MySkills from "@/components/portal/my-skills";
 import MyPractice from "@/components/portal/my-practice";
 import MyTodos from "@/components/portal/my-todos";
 import MyWallet from "@/components/portal/my-wallet";
+import MyEvents from "@/components/portal/my-events";
 import type { Block } from "@/types/database";
 
 interface StudentData {
@@ -105,6 +106,9 @@ export default function PortalHomePage() {
         <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border">
           <CurrentBlock blocks={blocks} />
         </Card>
+
+        {/* Student-specific events (pull-outs, support, etc.) */}
+        <MyEvents studentId={student.id} />
 
         {/* My Work */}
         <MyWork />
