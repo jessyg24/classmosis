@@ -26,9 +26,9 @@ interface Props {
 
 export default function ScheduleBlockCard({ block, cumulativeMinutesBefore }: Props) {
   const { activeBlockId, activeInsertId, setActiveBlock, removeBlock } = useScheduleStore();
-  const config = BLOCK_COLORS[block.type];
-  const woodColor = BLOCK_TYPE_WOOD[block.type];
-  const wood = BLOCK_WOOD[woodColor];
+  const config = BLOCK_COLORS[block.type] || { color: "bg-cm-teal", light: "bg-cm-teal-light", dark: "text-cm-teal-dark", label: block.type, defaultLabel: block.label, defaultDuration: 30 };
+  const woodColor = BLOCK_TYPE_WOOD[block.type] || (block.category === "core_academic" ? "blue" : block.category === "electives_specials" ? "pink" : block.category === "non_instructional" ? "amber" : block.category === "social_emotional" ? "teal" : block.category === "support_intervention" ? "purple" : "coral");
+  const wood = BLOCK_WOOD[woodColor as keyof typeof BLOCK_WOOD] || BLOCK_WOOD.teal;
   const isActive = activeBlockId === block.id;
   const hasInserts = block.inserts && block.inserts.length > 0;
 
