@@ -17,6 +17,14 @@ import {
   BookOpen,
   TrendingUp,
   Check,
+  Play,
+  Target,
+  ShoppingBag,
+  Trophy,
+  FileText,
+  Smile,
+  CircleDot,
+  Briefcase,
 } from "lucide-react";
 
 const replacedTools = [
@@ -337,58 +345,38 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Mock schedule blocks */}
-            <div className="flex flex-col gap-3">
-              <ScheduleBlock
-                color="teal"
-                label="Morning Meeting"
-                time="8:00 – 8:20"
-                type="Routine"
-                duration="20 min"
-              />
-              <ScheduleBlock
-                color="blue"
-                label="ELA — Main Idea & Details"
-                time="8:20 – 9:15"
-                type="Academic"
-                duration="55 min"
-                hasAssignment
-              />
-              <ScheduleBlock
-                color="amber"
-                label="Exit Ticket — Summarizing"
-                time="9:15 – 9:25"
-                type="Assessment"
-                duration="10 min"
-              />
-              <ScheduleBlock
-                color="blue"
-                label="Math — Fractions on a Number Line"
-                time="9:30 – 10:20"
-                type="Academic"
-                duration="50 min"
-                hasAssignment
-                hasPractice
-              />
-              <ScheduleBlock
-                color="purple"
-                label="Mystery Student Reveal"
-                time="2:45 – 2:55"
-                type="Economy"
-                duration="10 min"
-              />
-              <ScheduleBlock
-                color="teal"
-                label="Closing Circle"
-                time="2:55 – 3:10"
-                type="Routine"
-                duration="15 min"
-              />
+            {/* Mock schedule blocks — interlocking wooden building blocks */}
+            <div className="relative z-0 flex flex-col">
+              {[
+                { color: "teal" as const, label: "Morning Meeting", time: "8:00 – 8:20", type: "Routine", duration: "20 min" },
+                { color: "blue" as const, label: "ELA — Main Idea & Details", time: "8:20 – 9:15", type: "Academic", duration: "55 min", inserts: [
+                  { label: "Read passage: \"The Water Cycle\"", icon: "book" },
+                  { label: "Silent reading — 10 min", icon: "clock" },
+                  { label: "Written response", icon: "pencil" },
+                  { label: "Exit ticket: Main idea", icon: "check" },
+                ] },
+                { color: "amber" as const, label: "Recess & Snack", time: "9:15 – 9:35", type: "Routine", duration: "20 min" },
+                { color: "blue" as const, label: "Math — Fractions", time: "9:35 – 10:25", type: "Academic", duration: "50 min", inserts: [
+                  { label: "Mini-lesson: number line", icon: "book" },
+                  { label: "Guided practice", icon: "pencil" },
+                  { label: "Independent practice set", icon: "check" },
+                ] },
+                { color: "purple" as const, label: "Mystery Student Reveal", time: "2:45 – 2:55", type: "Economy", duration: "10 min" },
+                { color: "teal" as const, label: "Closing Circle", time: "2:55 – 3:10", type: "Routine", duration: "15 min" },
+              ].map((block, i, arr) => (
+                <ScheduleBlock
+                  key={i}
+                  {...block}
+                  isFirst={i === 0}
+                  isLast={i === arr.length - 1}
+                  depth={arr.length - i}
+                />
+              ))}
             </div>
           </div>
 
-          {/* Floating stat cards */}
-          <div className="absolute -left-4 top-12 hidden rounded-cm-card border border-cm-border bg-cm-surface p-3 shadow-lg lg:block">
+          {/* Floating stat cards — positioned outside the block area */}
+          <div className="absolute -left-8 top-16 z-10 hidden rounded-cm-card border border-cm-border bg-cm-surface p-3 shadow-lg xl:block">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cm-green-light">
                 <TrendingUp className="h-4 w-4 text-cm-green" />
@@ -404,7 +392,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="absolute -right-4 top-32 hidden rounded-cm-card border border-cm-border bg-cm-surface p-3 shadow-lg lg:block">
+          <div className="absolute -right-8 top-40 z-10 hidden rounded-cm-card border border-cm-border bg-cm-surface p-3 shadow-lg xl:block">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cm-amber-light">
                 <Coins className="h-4 w-4 text-cm-amber" />
@@ -513,11 +501,11 @@ export default function HomePage() {
               So simple a kindergartner can do it
             </h2>
             <p className="text-lg text-cm-text-secondary">
-              No email. No password. Just a code and a PIN &#8212; that&apos;s it.
+              No email. No password. No accounts. Just a code and a name.
             </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-4">
+          <div className="grid gap-8 md:grid-cols-3">
             <StepCard
               step={1}
               title="Enter code"
@@ -530,14 +518,570 @@ export default function HomePage() {
             />
             <StepCard
               step={3}
-              title="Enter PIN"
-              description="4-digit PIN — no email needed. Works for K–2."
-            />
-            <StepCard
-              step={4}
               title="Start learning"
               description="See the current block, timer, assignments, and coins."
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Student Portal Demo */}
+      <section className="px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-14 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cm-coral/20 bg-cm-coral-light px-4 py-1.5">
+              <Smile className="h-4 w-4 text-cm-coral" />
+              <span className="text-cm-caption font-medium uppercase tracking-wider text-cm-coral-dark">
+                Student portal
+              </span>
+            </div>
+            <h2 className="mb-4 text-3xl font-semibold tracking-tight text-cm-text-primary md:text-4xl">
+              What students see every day
+            </h2>
+            <p className="mx-auto max-w-2xl text-lg text-cm-text-secondary">
+              One thing at a time. Encouraging, warm, and clear. Celebrates small wins. Never overwhelming.
+            </p>
+          </div>
+
+          {/* Student portal mockup */}
+          <div className="rounded-cm-modal border border-cm-border bg-cm-white shadow-2xl shadow-black/[0.04] overflow-hidden">
+            {/* Student portal header */}
+            <div className="border-b border-cm-border bg-cm-surface px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-cm-coral-light text-sm font-semibold text-cm-coral-dark">
+                    MR
+                  </div>
+                  <div>
+                    <div className="text-cm-label font-medium text-cm-text-primary">
+                      Maya Rodriguez
+                    </div>
+                    <div className="text-cm-caption text-cm-text-hint">
+                      Ms. Glazewski&apos;s Class
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5 rounded-full bg-cm-amber-light px-3 py-1">
+                    <Coins className="h-4 w-4 text-cm-amber" />
+                    <span className="text-sm font-semibold text-cm-amber-dark">247</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-full bg-cm-purple-light px-3 py-1">
+                    <Briefcase className="h-3.5 w-3.5 text-cm-purple" />
+                    <span className="text-cm-caption font-medium text-cm-purple-dark">Tech Manager 1.5x</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-0 md:grid-cols-[1fr_320px]">
+              {/* Main content */}
+              <div className="p-6 md:border-r md:border-cm-border">
+                {/* NOW block — wooden C-shape */}
+                <div className="mb-6">
+                  <div className="mb-2 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    Happening Now
+                  </div>
+                  <WoodBlock color="blue">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <BookOpen className="h-5 w-5 text-white/80" />
+                        <div>
+                          <div className="text-sm font-semibold text-white" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>
+                            ELA — Main Idea &amp; Details
+                          </div>
+                          <div className="text-cm-caption text-white/60">Academic Block</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 rounded-[3px] bg-white/20 px-2.5 py-1">
+                        <Clock className="h-3.5 w-3.5 text-white" />
+                        <span className="text-cm-caption font-bold tabular-nums text-white">32:14</span>
+                      </div>
+                    </div>
+                  </WoodBlock>
+                  {/* Assignment insert */}
+                  <div className="mt-2 rounded-[4px] border border-cm-border bg-cm-surface p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-cm-blue" />
+                      <span className="text-sm font-medium text-cm-text-primary">
+                        Find the Main Idea — &quot;The Water Cycle&quot;
+                      </span>
+                    </div>
+                    <p className="mb-3 text-cm-caption leading-relaxed text-cm-text-secondary">
+                      Read the passage and identify the main idea. Write 2–3 sentences explaining how the details support it.
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-cm-caption text-cm-teal">
+                        <Coins className="h-3.5 w-3.5" />
+                        <span>+2 coins on submit, +1 on-time bonus</span>
+                      </div>
+                      <button className="inline-flex h-8 items-center gap-1.5 rounded-[3px] bg-cm-blue px-4 text-cm-caption font-medium text-white">
+                        <Play className="h-3.5 w-3.5" />
+                        Start
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* UP NEXT — wooden block */}
+                <div className="mb-6">
+                  <div className="mb-2 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    Up Next
+                  </div>
+                  <WoodBlock color="amber">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <GraduationCap className="h-4 w-4 text-white/80" />
+                        <div>
+                          <div className="text-sm font-semibold text-white" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>
+                            Recess &amp; Snack
+                          </div>
+                          <div className="text-cm-caption text-white/60">20 min</div>
+                        </div>
+                      </div>
+                      <span className="rounded-[3px] bg-white/20 px-2 py-0.5 text-cm-caption font-medium text-white">Routine</span>
+                    </div>
+                  </WoodBlock>
+                </div>
+
+                {/* Day schedule — mini wooden blocks */}
+                <div>
+                  <div className="mb-2 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    Today&apos;s Schedule
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <MiniWoodRow time="8:00" label="Morning Meeting" color="teal" status="done" />
+                    <MiniWoodRow time="8:20" label="ELA — Main Idea & Details" color="blue" status="active" />
+                    <MiniWoodRow time="9:15" label="Recess & Snack" color="amber" status="upcoming" />
+                    <MiniWoodRow time="9:35" label="Math — Fractions" color="blue" status="upcoming" />
+                    <MiniWoodRow time="10:25" label="Science" color="blue" status="upcoming" />
+                    <MiniWoodRow time="11:15" label="Lunch" color="teal" status="upcoming" />
+                    <MiniWoodRow time="12:00" label="Reading" color="blue" status="upcoming" />
+                    <MiniWoodRow time="12:45" label="Practice Problems" color="pink" status="upcoming" />
+                    <MiniWoodRow time="1:30" label="Social Studies" color="blue" status="upcoming" />
+                    <MiniWoodRow time="2:15" label="Art / PE" color="coral" status="upcoming" />
+                    <MiniWoodRow time="2:45" label="Mystery Student" color="purple" status="upcoming" />
+                    <MiniWoodRow time="2:55" label="Closing Circle" color="teal" status="upcoming" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sidebar */}
+              <div className="bg-cm-white p-6">
+                {/* Today's earnings */}
+                <div className="mb-6">
+                  <div className="mb-2 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    Today&apos;s Earnings
+                  </div>
+                  <div className="rounded-cm-button bg-cm-amber-light p-3">
+                    <div className="mb-1 text-2xl font-bold text-cm-amber-dark">+12</div>
+                    <div className="text-cm-caption text-cm-amber-dark">coins earned today</div>
+                    <div className="mt-2 flex flex-col gap-1">
+                      <div className="flex items-center justify-between text-cm-caption text-cm-text-secondary">
+                        <span>Attendance</span>
+                        <span className="font-medium text-cm-amber-dark">+1</span>
+                      </div>
+                      <div className="flex items-center justify-between text-cm-caption text-cm-text-secondary">
+                        <span>Morning Meeting</span>
+                        <span className="font-medium text-cm-amber-dark">+2</span>
+                      </div>
+                      <div className="flex items-center justify-between text-cm-caption text-cm-text-secondary">
+                        <span>Practice streak (5)</span>
+                        <span className="font-medium text-cm-amber-dark">+9</span>
+                      </div>
+                    </div>
+                    <div className="mt-2 border-t border-cm-amber/20 pt-2 text-cm-caption text-cm-purple">
+                      Tech Manager 1.5x applied
+                    </div>
+                  </div>
+                </div>
+
+                {/* Work queue */}
+                <div className="mb-6">
+                  <div className="mb-2 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    Work Queue
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2.5 rounded-cm-button border border-cm-border bg-cm-surface p-2.5">
+                      <CircleDot className="h-4 w-4 text-cm-blue" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-cm-caption font-medium text-cm-text-primary truncate">Main Idea — &quot;Water Cycle&quot;</div>
+                        <div className="text-[11px] text-cm-text-hint">Due today</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5 rounded-cm-button border border-cm-border bg-cm-surface p-2.5">
+                      <CircleDot className="h-4 w-4 text-cm-amber" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-cm-caption font-medium text-cm-text-primary truncate">Fractions Homework</div>
+                        <div className="text-[11px] text-cm-text-hint">Due tomorrow</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5 rounded-cm-button border border-cm-teal-light bg-cm-teal-light/50 p-2.5">
+                      <Check className="h-4 w-4 text-cm-teal" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-cm-caption font-medium text-cm-text-hint line-through truncate">Spelling List 14</div>
+                        <div className="text-[11px] text-cm-teal">Submitted</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* My Goals */}
+                <div className="mb-6">
+                  <div className="mb-2 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    My Goals
+                  </div>
+                  <div className="rounded-cm-button border border-cm-border bg-cm-surface p-3">
+                    <div className="mb-1 flex items-center gap-2">
+                      <Target className="h-3.5 w-3.5 text-cm-purple" />
+                      <span className="text-cm-caption font-medium text-cm-text-primary">
+                        Main idea mastery
+                      </span>
+                    </div>
+                    <div className="mb-1.5 text-[11px] text-cm-text-hint">Almost there!</div>
+                    <div className="h-2 w-full rounded-full bg-cm-purple-light">
+                      <div className="h-2 rounded-full bg-cm-purple" style={{ width: "78%" }} />
+                    </div>
+                    <div className="mt-1 text-right text-[11px] font-medium text-cm-purple">78%</div>
+                  </div>
+                </div>
+
+                {/* My Skills */}
+                <div className="mb-6">
+                  <div className="mb-2 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    My Skills
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between rounded-cm-badge bg-cm-green-light px-2.5 py-1.5">
+                      <span className="text-cm-caption text-cm-green-dark">Multiplication facts</span>
+                      <span className="text-[11px] font-semibold text-cm-green-dark">Got it!</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-cm-badge bg-cm-purple-light px-2.5 py-1.5">
+                      <span className="text-cm-caption text-cm-purple-dark">Finding main idea</span>
+                      <span className="text-[11px] font-semibold text-cm-purple-dark">Almost there</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-cm-badge bg-cm-blue-light px-2.5 py-1.5">
+                      <span className="text-cm-caption text-cm-blue-dark">Fractions</span>
+                      <span className="text-[11px] font-semibold text-cm-blue-dark">Building</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Store peek */}
+                <div>
+                  <div className="mb-2 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    Class Store
+                  </div>
+                  <div className="flex items-center gap-2.5 rounded-cm-button border border-cm-border bg-cm-surface p-2.5">
+                    <ShoppingBag className="h-4 w-4 text-cm-amber" />
+                    <div className="flex-1">
+                      <div className="text-cm-caption font-medium text-cm-text-primary">Homework Pass</div>
+                      <div className="text-[11px] text-cm-text-hint">50 coins</div>
+                    </div>
+                    <span className="text-cm-caption font-medium text-cm-amber">Shop</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Teacher Dashboard Demo */}
+      <section className="border-y border-cm-border bg-cm-surface px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-14 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cm-teal/20 bg-cm-teal-light px-4 py-1.5">
+              <BarChart3 className="h-4 w-4 text-cm-teal" />
+              <span className="text-cm-caption font-medium uppercase tracking-wider text-cm-teal-dark">
+                Teacher dashboard
+              </span>
+            </div>
+            <h2 className="mb-4 text-3xl font-semibold tracking-tight text-cm-text-primary md:text-4xl">
+              Your command center
+            </h2>
+            <p className="mx-auto max-w-2xl text-lg text-cm-text-secondary">
+              AI morning brief, live class health, and one-tap actions. Everything you need before the bell rings.
+            </p>
+          </div>
+
+          <div className="rounded-cm-modal border border-cm-border bg-cm-white shadow-2xl shadow-black/[0.04] overflow-hidden">
+            {/* Teacher dashboard header */}
+            <div className="border-b border-cm-border bg-cm-surface px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-cm-button bg-cm-teal">
+                      <BookOpen className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-cm-label font-semibold text-cm-text-primary">
+                      Classmosis
+                    </span>
+                  </div>
+                  <div className="hidden items-center gap-1 md:flex">
+                    <span className="rounded-cm-button bg-cm-teal-light px-3 py-1.5 text-cm-caption font-medium text-cm-teal-dark">
+                      Dashboard
+                    </span>
+                    <span className="rounded-cm-button px-3 py-1.5 text-cm-caption font-medium text-cm-text-hint hover:text-cm-text-secondary">
+                      Schedule
+                    </span>
+                    <span className="rounded-cm-button px-3 py-1.5 text-cm-caption font-medium text-cm-text-hint hover:text-cm-text-secondary">
+                      Gradebook
+                    </span>
+                    <span className="rounded-cm-button px-3 py-1.5 text-cm-caption font-medium text-cm-text-hint hover:text-cm-text-secondary">
+                      Economy
+                    </span>
+                    <span className="rounded-cm-button px-3 py-1.5 text-cm-caption font-medium text-cm-text-hint hover:text-cm-text-secondary">
+                      Students
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="rounded-cm-badge bg-cm-purple-light px-2.5 py-0.5 text-cm-caption font-medium text-cm-purple-dark">
+                    3rd Grade &middot; Room 14
+                  </span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cm-teal-light text-cm-caption font-semibold text-cm-teal-dark">
+                    JG
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-0 lg:grid-cols-[1fr_340px]">
+              {/* Main area */}
+              <div className="p-6">
+                {/* Morning brief */}
+                <div className="mb-6 rounded-cm-card border border-cm-pink/20 bg-cm-pink-light/50 p-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-cm-pink" />
+                    <span className="text-cm-label font-semibold text-cm-pink-dark">Morning Brief</span>
+                    <span className="text-cm-caption text-cm-text-hint">March 19, 2026</span>
+                  </div>
+                  <p className="mb-3 text-cm-body leading-relaxed text-cm-text-primary">
+                    Good morning! 24 of 26 students submitted yesterday&apos;s ELA assignment. Practice accuracy is up 8% this week — nice work on the fractions unit. Two students need your attention today.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between rounded-cm-button bg-cm-surface p-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-2 w-2 rounded-full bg-cm-coral" />
+                        <span className="text-cm-caption text-cm-text-primary">
+                          <span className="font-medium">Ethan M.</span> — no submissions in 3 days, mood check-ins trending &quot;tired&quot;
+                        </span>
+                      </div>
+                      <button className="text-cm-caption font-medium text-cm-pink">Spotlight</button>
+                    </div>
+                    <div className="flex items-center justify-between rounded-cm-button bg-cm-surface p-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-2 w-2 rounded-full bg-cm-amber" />
+                        <span className="text-cm-caption text-cm-text-primary">
+                          <span className="font-medium">Sofia L.</span> — fractions practice dropped below 60%, may need re-teach
+                        </span>
+                      </div>
+                      <button className="text-cm-caption font-medium text-cm-pink">Re-teach</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats row */}
+                <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+                  <TeacherStatCard label="Submission Rate" value="92%" trend="+3%" trendUp />
+                  <TeacherStatCard label="Practice Accuracy" value="78%" trend="+8%" trendUp />
+                  <TeacherStatCard label="Avg Grade" value="B+" trend="same" />
+                  <TeacherStatCard label="Missing Work" value="4" trend="-2" trendUp />
+                </div>
+
+                {/* Today's schedule compact */}
+                <div className="mb-6">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-cm-label font-semibold text-cm-text-primary">Today&apos;s Schedule</span>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-cm-badge bg-cm-teal-light px-2 py-0.5 text-cm-caption font-medium text-cm-teal-dark">
+                        Published
+                      </span>
+                      <span className="rounded-cm-badge bg-cm-purple-light px-2 py-0.5 text-cm-caption font-medium text-cm-purple-dark">
+                        Code: 4821
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <MiniWoodRow time="8:00" label="Morning Meeting" color="teal" status="done" />
+
+                    {/* ELA block — expanded C-shape showing inserts */}
+                    <ExpandedTeacherBlock
+                      time="8:20"
+                      label="ELA — Main Idea & Details"
+                      color="blue"
+                      duration="55 min"
+                      type="Academic"
+                      badge="18/26 submitted"
+                      inserts={[
+                        { label: "Read passage: \"The Water Cycle\"", icon: "book" },
+                        { label: "Silent reading — 10 min", icon: "clock" },
+                        { label: "Written response", icon: "pencil" },
+                        { label: "Exit ticket: Main idea", icon: "check" },
+                      ]}
+                    />
+
+                    <MiniWoodRow time="9:15" label="Recess & Snack" color="amber" status="upcoming" />
+                    <MiniWoodRow time="9:35" label="Math — Fractions" color="blue" status="upcoming" />
+                    <MiniWoodRow time="2:45" label="Mystery Student" color="purple" status="upcoming" />
+                    <MiniWoodRow time="2:55" label="Closing Circle" color="teal" status="upcoming" />
+                  </div>
+                </div>
+
+                {/* Grading queue */}
+                <div>
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-cm-label font-semibold text-cm-text-primary">Grading Queue</span>
+                    <span className="text-cm-caption text-cm-text-hint">8 items</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between rounded-cm-button border border-cm-border bg-cm-surface p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-cm-blue-light text-[11px] font-semibold text-cm-blue-dark">AI</div>
+                        <div>
+                          <div className="text-cm-caption font-medium text-cm-text-primary">Spelling List 14 — Marcus T.</div>
+                          <div className="text-[11px] text-cm-text-hint">AI draft ready &middot; High confidence</div>
+                        </div>
+                      </div>
+                      <button className="rounded-cm-badge bg-cm-teal-light px-2.5 py-1 text-cm-caption font-medium text-cm-teal-dark">
+                        Approve
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between rounded-cm-button border border-cm-border bg-cm-surface p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-cm-amber-light text-[11px] font-semibold text-cm-amber-dark">AI</div>
+                        <div>
+                          <div className="text-cm-caption font-medium text-cm-text-primary">Main Idea Response — Lily K.</div>
+                          <div className="text-[11px] text-cm-text-hint">AI draft ready &middot; Needs review</div>
+                        </div>
+                      </div>
+                      <button className="rounded-cm-badge bg-cm-blue-light px-2.5 py-1 text-cm-caption font-medium text-cm-blue-dark">
+                        Review
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right sidebar */}
+              <div className="border-t border-cm-border bg-cm-white p-6 lg:border-l lg:border-t-0">
+                {/* Class health */}
+                <div className="mb-6">
+                  <div className="mb-3 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    Class Health
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between rounded-cm-button bg-cm-teal-light/50 p-2.5">
+                      <span className="text-cm-caption text-cm-text-secondary">Attendance</span>
+                      <span className="text-cm-caption font-semibold text-cm-teal-dark">25/26</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-cm-button bg-cm-surface p-2.5">
+                      <span className="text-cm-caption text-cm-text-secondary">Mood check-ins</span>
+                      <span className="text-cm-caption font-semibold text-cm-text-primary">20/25</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-cm-button bg-cm-surface p-2.5">
+                      <span className="text-cm-caption text-cm-text-secondary">Hands raised</span>
+                      <span className="text-cm-caption font-semibold text-cm-text-primary">3</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mood snapshot */}
+                <div className="mb-6">
+                  <div className="mb-3 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    Mood Snapshot
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[
+                      { emoji: "😊", count: 10, label: "Great" },
+                      { emoji: "🙂", count: 6, label: "Good" },
+                      { emoji: "😐", count: 3, label: "Okay" },
+                      { emoji: "😴", count: 1, label: "Tired" },
+                    ].map((m) => (
+                      <div key={m.label} className="flex flex-col items-center rounded-cm-badge bg-cm-surface p-2">
+                        <span className="text-lg">{m.emoji}</span>
+                        <span className="text-[11px] font-semibold text-cm-text-primary">{m.count}</span>
+                        <span className="text-[10px] text-cm-text-hint">{m.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Economy pulse */}
+                <div className="mb-6">
+                  <div className="mb-3 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    Economy Pulse
+                  </div>
+                  <div className="rounded-cm-button bg-cm-amber-light/50 p-3">
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-cm-caption text-cm-text-secondary">Coins awarded today</span>
+                      <span className="text-cm-caption font-bold text-cm-amber-dark">342</span>
+                    </div>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-cm-caption text-cm-text-secondary">Store purchases</span>
+                      <span className="text-cm-caption font-bold text-cm-amber-dark">5</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-cm-caption text-cm-text-secondary">Mystery student</span>
+                      <span className="text-cm-caption font-medium text-cm-purple">Hidden</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Standards progress */}
+                <div className="mb-6">
+                  <div className="mb-3 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    Standards This Week
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-cm-caption text-cm-text-secondary">RL.3.2 Main Idea</span>
+                        <span className="text-[11px] font-medium text-cm-green">72% mastered</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-cm-green-light">
+                        <div className="h-1.5 rounded-full bg-cm-green" style={{ width: "72%" }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-cm-caption text-cm-text-secondary">3.NF.A.2 Number Line</span>
+                        <span className="text-[11px] font-medium text-cm-purple">48% mastered</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-cm-purple-light">
+                        <div className="h-1.5 rounded-full bg-cm-purple" style={{ width: "48%" }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick actions */}
+                <div>
+                  <div className="mb-3 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
+                    Quick Actions
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button className="flex flex-col items-center gap-1 rounded-cm-button border border-cm-border bg-cm-surface p-2.5 text-cm-caption text-cm-text-secondary hover:bg-cm-white">
+                      <Coins className="h-4 w-4 text-cm-amber" />
+                      Award Coins
+                    </button>
+                    <button className="flex flex-col items-center gap-1 rounded-cm-button border border-cm-border bg-cm-surface p-2.5 text-cm-caption text-cm-text-secondary hover:bg-cm-white">
+                      <Trophy className="h-4 w-4 text-cm-purple" />
+                      Reveal Mystery
+                    </button>
+                    <button className="flex flex-col items-center gap-1 rounded-cm-button border border-cm-border bg-cm-surface p-2.5 text-cm-caption text-cm-text-secondary hover:bg-cm-white">
+                      <Eye className="h-4 w-4 text-cm-teal" />
+                      Projector View
+                    </button>
+                    <button className="flex flex-col items-center gap-1 rounded-cm-button border border-cm-border bg-cm-surface p-2.5 text-cm-caption text-cm-text-secondary hover:bg-cm-white">
+                      <Users className="h-4 w-4 text-cm-blue" />
+                      Equity Picker
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -609,7 +1153,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid items-start gap-6 md:grid-cols-2 lg:gap-8">
+          <div className="grid items-start gap-6 md:grid-cols-3 lg:gap-8">
             {/* Free tier */}
             <div className="rounded-cm-card border border-cm-border bg-cm-white p-8">
               <div className="mb-1 text-cm-overline font-medium uppercase tracking-wider text-cm-text-hint">
@@ -645,14 +1189,14 @@ export default function HomePage() {
               </ul>
             </div>
 
-            {/* Pro tier */}
+            {/* Pro Monthly */}
             <div className="relative rounded-cm-card border-2 border-cm-teal bg-cm-white p-8">
               <div className="absolute -top-3 right-6 rounded-full bg-cm-teal px-3 py-0.5 text-cm-caption font-medium text-white">
                 7-day free trial
               </div>
 
               <div className="mb-1 text-cm-overline font-medium uppercase tracking-wider text-cm-teal">
-                Pro
+                Pro Monthly
               </div>
               <div className="mb-1 flex items-baseline gap-1">
                 <span className="text-4xl font-semibold text-cm-text-primary">
@@ -660,11 +1204,8 @@ export default function HomePage() {
                 </span>
                 <span className="text-cm-body text-cm-text-hint">/month</span>
               </div>
-              <p className="mb-1 text-cm-body text-cm-text-secondary">
+              <p className="mb-6 text-cm-body text-cm-text-secondary">
                 The full classroom operating system. Unlimited everything.
-              </p>
-              <p className="mb-6 text-cm-caption text-cm-teal">
-                Or $119/year — save over 50%
               </p>
 
               <Link
@@ -682,6 +1223,46 @@ export default function HomePage() {
                     className="flex items-start gap-2.5 text-cm-body text-cm-text-secondary"
                   >
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-cm-teal" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Pro Annual */}
+            <div className="relative rounded-cm-card border-2 border-cm-purple bg-cm-white p-8">
+              <div className="absolute -top-3 right-6 rounded-full bg-cm-purple px-3 py-0.5 text-cm-caption font-medium text-white">
+                Save over 50%
+              </div>
+
+              <div className="mb-1 text-cm-overline font-medium uppercase tracking-wider text-cm-purple">
+                Pro Annual
+              </div>
+              <div className="mb-1 flex items-baseline gap-1">
+                <span className="text-4xl font-semibold text-cm-text-primary">
+                  $119
+                </span>
+                <span className="text-cm-body text-cm-text-hint">/year</span>
+              </div>
+              <p className="mb-6 text-cm-body text-cm-text-secondary">
+                Everything in Pro. Billed annually at $9.92/mo.
+              </p>
+
+              <Link
+                href="/signup?plan=pro-annual"
+                className="mb-8 flex h-11 w-full items-center justify-center gap-2 rounded-cm-button bg-cm-purple text-sm font-medium text-white shadow-lg shadow-cm-purple/20 transition-all hover:bg-cm-purple-dark hover:shadow-xl"
+              >
+                Start 7-day free trial
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+
+              <ul className="flex flex-col gap-3">
+                {proFeatures.map((f) => (
+                  <li
+                    key={f}
+                    className="flex items-start gap-2.5 text-cm-body text-cm-text-secondary"
+                  >
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-cm-purple" />
                     {f}
                   </li>
                 ))}
@@ -782,100 +1363,208 @@ export default function HomePage() {
   );
 }
 
+type BlockColor = "teal" | "blue" | "amber" | "purple" | "coral" | "pink";
+type BlockInsert = { label: string; icon: string };
+
+const WOOD: Record<BlockColor, { base: string; dark: string; grain: string }> = {
+  teal:   { base: "#62A080", dark: "#4E8B6A", grain: "rgba(0,0,0,0.05)" },
+  blue:   { base: "#7090B0", dark: "#5A7B9E", grain: "rgba(0,0,0,0.04)" },
+  amber:  { base: "#C49B56", dark: "#B08840", grain: "rgba(0,0,0,0.05)" },
+  purple: { base: "#9585B8", dark: "#7E6DA8", grain: "rgba(0,0,0,0.04)" },
+  coral:  { base: "#C47E5E", dark: "#B06848", grain: "rgba(0,0,0,0.05)" },
+  pink:   { base: "#B47890", dark: "#A0607A", grain: "rgba(0,0,0,0.04)" },
+};
+
+function woodGrain(grain: string) {
+  return [
+    `repeating-linear-gradient(88deg, transparent, transparent 3px, ${grain} 3px, ${grain} 5px)`,
+    `repeating-linear-gradient(91deg, transparent, transparent 11px, ${grain} 11px, ${grain} 13px)`,
+    `repeating-linear-gradient(86deg, transparent, transparent 23px, rgba(255,255,255,0.04) 23px, rgba(255,255,255,0.04) 26px)`,
+    `linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 30%, rgba(0,0,0,0.08) 100%)`,
+  ].join(", ");
+}
+
+const TAB_W = 36;
+const TAB_H = 10;
+const TAB_L = 24;
+
+const insertIcons: Record<string, typeof BookOpen> = {
+  book: BookOpen,
+  clock: Clock,
+  pencil: FileText,
+  check: Check,
+};
+
 function ScheduleBlock({
   color,
   label,
   time,
   type,
   duration,
-  hasAssignment,
-  hasPractice,
+  inserts,
+  isFirst,
+  isLast,
+  depth = 1,
 }: {
-  color: string;
+  color: BlockColor;
   label: string;
   time: string;
   type: string;
   duration: string;
-  hasAssignment?: boolean;
-  hasPractice?: boolean;
+  inserts?: BlockInsert[];
+  isFirst?: boolean;
+  isLast?: boolean;
+  depth?: number;
 }) {
-  const colorMap: Record<string, { bg: string; border: string; text: string; badge: string }> = {
-    teal: {
-      bg: "bg-cm-teal-light",
-      border: "border-l-cm-teal",
-      text: "text-cm-teal-dark",
-      badge: "bg-cm-teal/10 text-cm-teal-dark",
-    },
-    blue: {
-      bg: "bg-cm-blue-light",
-      border: "border-l-cm-blue",
-      text: "text-cm-blue-dark",
-      badge: "bg-cm-blue/10 text-cm-blue-dark",
-    },
-    amber: {
-      bg: "bg-cm-amber-light",
-      border: "border-l-cm-amber",
-      text: "text-cm-amber-dark",
-      badge: "bg-cm-amber/10 text-cm-amber-dark",
-    },
-    purple: {
-      bg: "bg-cm-purple-light",
-      border: "border-l-cm-purple",
-      text: "text-cm-purple-dark",
-      badge: "bg-cm-purple/10 text-cm-purple-dark",
-    },
-    coral: {
-      bg: "bg-cm-coral-light",
-      border: "border-l-cm-coral",
-      text: "text-cm-coral-dark",
-      badge: "bg-cm-coral/10 text-cm-coral-dark",
-    },
-    pink: {
-      bg: "bg-cm-pink-light",
-      border: "border-l-cm-pink",
-      text: "text-cm-pink-dark",
-      badge: "bg-cm-pink/10 text-cm-pink-dark",
-    },
+  const w = WOOD[color] || WOOD.teal;
+  const grain = woodGrain(w.grain);
+  const hasInserts = inserts && inserts.length > 0;
+
+  const woodStyle = {
+    backgroundColor: w.base,
+    backgroundImage: grain,
   };
 
-  const c = colorMap[color] || colorMap.teal;
+  const depthBar = (radius?: string) => (
+    <div
+      className="absolute inset-x-0 bottom-0"
+      style={{ height: 3, backgroundColor: w.dark, borderRadius: radius }}
+    />
+  );
 
   return (
     <div
-      className={`flex items-center justify-between rounded-cm-button border-l-[3px] ${c.border} ${c.bg} px-4 py-3`}
+      className="relative"
+      style={{ marginTop: isFirst ? 0 : -TAB_H, zIndex: depth }}
     >
-      <div className="flex items-center gap-4">
-        <div className="hidden w-24 text-cm-caption text-cm-text-hint sm:block">
-          {time}
+      {/* Socket row — colored strip with rectangular punch-out for the tab above */}
+      {!isFirst && (
+        <div className="relative overflow-hidden" style={{ height: TAB_H }}>
+          <div className="absolute inset-0" style={woodStyle} />
+          {/* Rectangular socket — exact same size as tab, no border-radius so edges are flush */}
+          <div
+            className="absolute top-0 bg-cm-surface"
+            style={{ left: TAB_L, width: TAB_W, height: TAB_H }}
+          />
         </div>
-        <div>
-          <div className="text-cm-body font-medium text-cm-text-primary">
-            {label}
+      )}
+
+      {/* Top bar — block header */}
+      <div
+        className="relative px-4 py-3"
+        style={{
+          ...woodStyle,
+          borderRadius: isFirst ? "4px 4px 0 0" : "0",
+        }}
+      >
+        {isFirst && <div className="absolute inset-x-0 top-0 h-[1px] rounded-t-[4px] bg-white/20" />}
+        {!hasInserts && depthBar(isLast ? "0 0 4px 4px" : undefined)}
+
+        <div className="relative flex items-center justify-between text-white">
+          <div className="flex items-center gap-4">
+            <div className="hidden w-24 text-cm-caption text-white/50 sm:block">{time}</div>
+            <div className="text-sm font-semibold" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>
+              {label}
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            {hasAssignment && (
-              <span className="text-cm-caption text-cm-text-hint">
-                Assignment attached
-              </span>
-            )}
-            {hasPractice && (
-              <span className="text-cm-caption text-cm-text-hint">
-                + Practice
-              </span>
-            )}
+            <span className="hidden text-cm-caption text-white/50 sm:block">{duration}</span>
+            <span
+              className="rounded-[3px] px-2 py-0.5 text-cm-caption font-semibold text-white"
+              style={{ backgroundColor: "rgba(255,255,255,0.18)", textShadow: "0 1px 1px rgba(0,0,0,0.2)" }}
+            >
+              {type}
+            </span>
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="hidden text-cm-caption text-cm-text-hint sm:block">
-          {duration}
-        </span>
-        <span
-          className={`rounded-cm-badge px-2 py-0.5 text-cm-caption font-medium ${c.badge}`}
+
+      {/* C-shaped body — inserts nest inside */}
+      {hasInserts && (
+        <>
+          {/* Left wall + insert area */}
+          <div className="flex">
+            {/* Left wall of the C-shape */}
+            <div
+              className="relative shrink-0"
+              style={{ ...woodStyle, width: TAB_L }}
+            >
+              <div className="absolute inset-y-0 right-0 w-[1px] bg-black/10" />
+            </div>
+
+            {/* Insert well */}
+            <div className="flex-1 bg-cm-surface py-2 pl-2 pr-3">
+              <div className="flex flex-col gap-1.5">
+                {inserts.map((insert, idx) => {
+                  const IconComp = insertIcons[insert.icon] || BookOpen;
+                  const insertColors = [
+                    { base: "#D4A880", dark: "#C4956B" },
+                    { base: "#A39070", dark: "#8E7A5A" },
+                    { base: "#C88E70", dark: "#B5785A" },
+                    { base: "#AFA484", dark: "#9A8E6E" },
+                  ];
+                  const ic = insertColors[idx % insertColors.length];
+                  const insertGrain = woodGrain("rgba(0,0,0,0.07)");
+                  return (
+                    <div
+                      key={idx}
+                      className="relative flex items-center gap-2.5 px-3 py-2.5 text-white"
+                      style={{
+                        backgroundColor: ic.base,
+                        backgroundImage: insertGrain,
+                        borderRadius: "3px",
+                      }}
+                    >
+                      <div
+                        className="absolute inset-x-0 bottom-0"
+                        style={{ height: 2, backgroundColor: ic.dark, borderRadius: "0 0 3px 3px" }}
+                      />
+                      <div className="absolute inset-x-0 top-0 h-[1px] rounded-t-[3px] bg-white/15" />
+                      <IconComp className="relative h-3.5 w-3.5 shrink-0 text-white/70" />
+                      <span
+                        className="relative text-cm-caption font-semibold"
+                        style={{ textShadow: "0 1px 1px rgba(0,0,0,0.25)" }}
+                      >
+                        {insert.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom bar of the C-shape */}
+          <div
+            className="relative px-4 py-2"
+            style={{
+              ...woodStyle,
+              borderRadius: isLast ? "0 0 4px 4px" : "0",
+            }}
+          >
+            {depthBar(isLast ? "0 0 4px 4px" : undefined)}
+          </div>
+        </>
+      )}
+
+      {/* Tab — protrudes down, rectangular with rounded bottom only */}
+      {!isLast && (
+        <div
+          className="relative overflow-hidden"
+          style={{
+            marginLeft: TAB_L,
+            width: TAB_W,
+            height: TAB_H,
+            ...woodStyle,
+            borderRadius: "0 0 4px 4px",
+          }}
         >
-          {type}
-        </span>
-      </div>
+          <div
+            className="absolute inset-x-0 bottom-0"
+            style={{ height: 2, backgroundColor: w.dark, borderRadius: "0 0 4px 4px" }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -889,15 +1578,224 @@ function StepCard({
   title: string;
   description: string;
 }) {
+  const stepColors: Record<number, BlockColor> = { 1: "teal", 2: "blue", 3: "amber", 4: "purple" };
+  const c = stepColors[step] || "teal";
+  const w = WOOD[c];
   return (
     <div className="text-center">
-      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-cm-teal-light text-lg font-semibold text-cm-teal">
+      <div
+        className="relative mx-auto mb-4 flex h-12 w-12 items-center justify-center text-lg font-bold text-white"
+        style={{
+          backgroundColor: w.base,
+          backgroundImage: woodGrain(w.grain),
+          borderRadius: "4px",
+          textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+        }}
+      >
+        <div className="absolute inset-x-0 bottom-0 h-[2px] rounded-b-[4px]" style={{ backgroundColor: w.dark }} />
+        <div className="absolute inset-x-0 top-0 h-[1px] rounded-t-[4px] bg-white/20" />
         {step}
       </div>
       <h3 className="mb-2 text-cm-label font-semibold text-cm-text-primary">
         {title}
       </h3>
       <p className="text-cm-body text-cm-text-secondary">{description}</p>
+    </div>
+  );
+}
+
+/** A standalone wooden block used in demos */
+function WoodBlock({ color, children }: { color: BlockColor; children: React.ReactNode }) {
+  const w = WOOD[color];
+  return (
+    <div
+      className="relative rounded-[4px] px-4 py-3"
+      style={{
+        backgroundColor: w.base,
+        backgroundImage: woodGrain(w.grain),
+      }}
+    >
+      <div className="absolute inset-x-0 bottom-0 h-[3px] rounded-b-[4px]" style={{ backgroundColor: w.dark }} />
+      <div className="absolute inset-x-0 top-0 h-[1px] rounded-t-[4px] bg-white/20" />
+      <div className="relative">{children}</div>
+    </div>
+  );
+}
+
+/** Mini wooden block row for schedule lists in demos */
+function MiniWoodRow({
+  time,
+  label,
+  color,
+  status,
+  badge,
+}: {
+  time: string;
+  label: string;
+  color: string;
+  status: "done" | "active" | "upcoming";
+  badge?: string;
+}) {
+  const w = WOOD[(color as BlockColor)] || WOOD.teal;
+  const isActive = status === "active";
+  const isDone = status === "done";
+
+  return (
+    <div
+      className="relative flex items-center gap-3 rounded-[3px] px-3 py-1.5"
+      style={{
+        backgroundColor: w.base,
+        backgroundImage: woodGrain(w.grain),
+        opacity: isDone ? 0.5 : 1,
+        boxShadow: isActive ? `0 0 0 2px ${w.base}44` : undefined,
+      }}
+    >
+      {/* Depth edge */}
+      <div className="absolute inset-x-0 bottom-0 h-[2px] rounded-b-[3px]" style={{ backgroundColor: w.dark }} />
+      <div className="absolute inset-x-0 top-0 h-[1px] rounded-t-[3px] bg-white/15" />
+
+      <span className="relative w-10 text-cm-caption text-white/60">{time}</span>
+      <span
+        className={`relative text-cm-caption font-medium text-white ${isDone ? "line-through opacity-70" : ""}`}
+        style={{ textShadow: "0 1px 1px rgba(0,0,0,0.25)" }}
+      >
+        {label}
+      </span>
+      {isDone && <Check className="relative ml-auto h-3 w-3 text-white/70" />}
+      {isActive && badge && (
+        <span className="relative ml-auto rounded-[3px] bg-white/20 px-1.5 py-0.5 text-[10px] font-medium text-white">
+          {badge}
+        </span>
+      )}
+      {isActive && !badge && (
+        <span className="relative ml-auto flex h-2 w-2">
+          <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-white opacity-60" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Expanded C-shaped block for teacher dashboard demo — shows inserts */
+function ExpandedTeacherBlock({
+  time,
+  label,
+  color,
+  duration,
+  type,
+  badge,
+  inserts,
+}: {
+  time: string;
+  label: string;
+  color: BlockColor;
+  duration: string;
+  type: string;
+  badge?: string;
+  inserts: BlockInsert[];
+}) {
+  const w = WOOD[color];
+  const grain = woodGrain(w.grain);
+  const woodStyle = { backgroundColor: w.base, backgroundImage: grain };
+
+  const insertColors = [
+    { base: "#D4A880", dark: "#C4956B" },
+    { base: "#A39070", dark: "#8E7A5A" },
+    { base: "#C88E70", dark: "#B5785A" },
+    { base: "#AFA484", dark: "#9A8E6E" },
+  ];
+
+  return (
+    <div className="relative" style={{ boxShadow: `0 0 0 2px ${w.base}44` }}>
+      {/* Top bar */}
+      <div
+        className="relative rounded-t-[4px] px-3 py-2"
+        style={woodStyle}
+      >
+        <div className="absolute inset-x-0 top-0 h-[1px] rounded-t-[4px] bg-white/20" />
+        <div className="relative flex items-center justify-between text-white">
+          <div className="flex items-center gap-3">
+            <span className="text-cm-caption text-white/60">{time}</span>
+            <span className="text-cm-caption font-semibold" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.3)" }}>
+              {label}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {badge && (
+              <span className="rounded-[3px] bg-white/20 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                {badge}
+              </span>
+            )}
+            <span className="rounded-[3px] bg-white/15 px-1.5 py-0.5 text-[10px] font-medium text-white/80">
+              {duration}
+            </span>
+            <span className="rounded-[3px] bg-white/15 px-1.5 py-0.5 text-[10px] font-medium text-white/80">
+              {type}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* C-body: left wall + inserts */}
+      <div className="flex">
+        <div className="relative shrink-0" style={{ ...woodStyle, width: 16 }}>
+          <div className="absolute inset-y-0 right-0 w-[1px] bg-black/10" />
+        </div>
+        <div className="flex-1 bg-cm-surface py-1.5 pl-1.5 pr-2">
+          <div className="flex flex-col gap-1">
+            {inserts.map((insert, idx) => {
+              const IconComp = insertIcons[insert.icon] || BookOpen;
+              const ic = insertColors[idx % insertColors.length];
+              const iGrain = woodGrain("rgba(0,0,0,0.07)");
+              return (
+                <div
+                  key={idx}
+                  className="relative flex items-center gap-2 rounded-[3px] px-2.5 py-1.5 text-white"
+                  style={{ backgroundColor: ic.base, backgroundImage: iGrain }}
+                >
+                  <div className="absolute inset-x-0 bottom-0 h-[2px] rounded-b-[3px]" style={{ backgroundColor: ic.dark }} />
+                  <div className="absolute inset-x-0 top-0 h-[1px] rounded-t-[3px] bg-white/15" />
+                  <IconComp className="relative h-3 w-3 shrink-0 text-white/70" />
+                  <span className="relative text-[11px] font-medium" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.2)" }}>
+                    {insert.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="relative rounded-b-[4px] px-3 py-1.5" style={woodStyle}>
+        <div className="absolute inset-x-0 bottom-0 h-[3px] rounded-b-[4px]" style={{ backgroundColor: w.dark }} />
+      </div>
+    </div>
+  );
+}
+
+function TeacherStatCard({
+  label,
+  value,
+  trend,
+  trendUp,
+}: {
+  label: string;
+  value: string;
+  trend: string;
+  trendUp?: boolean;
+}) {
+  return (
+    <div className="rounded-cm-button border border-cm-border bg-cm-surface p-3">
+      <div className="text-cm-caption text-cm-text-hint">{label}</div>
+      <div className="mt-1 flex items-baseline gap-2">
+        <span className="text-xl font-bold text-cm-text-primary">{value}</span>
+        <span className={`text-[11px] font-medium ${trendUp ? "text-cm-teal" : "text-cm-text-hint"}`}>
+          {trend === "same" ? "—" : trend}
+          {trendUp && " ↑"}
+        </span>
+      </div>
     </div>
   );
 }

@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { classCode, studentId, pin } = body;
+  const { classCode, studentId } = body;
 
-  if (!classCode || !studentId || !pin) {
+  if (!classCode || !studentId) {
     return NextResponse.json(
-      { error: { code: "MISSING_FIELDS", message: "Class code, student ID, and PIN are required." } },
+      { error: { code: "MISSING_FIELDS", message: "Class code and student ID are required." } },
       { status: 400 }
     );
   }
@@ -36,10 +35,10 @@ export async function POST(request: Request) {
     );
   }
 
-  // Look up student
+  // Look up student — no PIN needed, just verify they're in this class
   const { data: student } = await supabase
     .from("students")
-    .select("id, display_name, class_id, pin_hash, coin_balance")
+    .select("id, display_name, class_id, coin_balance")
     .eq("id", studentId)
     .eq("class_id", codeRow.class_id)
     .is("archived_at", null)
@@ -52,16 +51,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // Verify PIN
-  const pinValid = await bcrypt.compare(pin, student.pin_hash);
-  if (!pinValid) {
-    return NextResponse.json(
-      { error: { code: "INVALID_PIN", message: "That PIN doesn't match. Try again or ask your teacher to reset it." } },
-      { status: 401 }
-    );
-  }
-
-  // Get class name for the token
+  // Get class name for the response
   const { data: cls } = await supabase
     .from("classes")
     .select("name")

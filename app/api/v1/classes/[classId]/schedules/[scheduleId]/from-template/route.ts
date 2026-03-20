@@ -63,6 +63,7 @@ export async function POST(
     external_link?: unknown;
     economy_trigger?: unknown;
     visible_to_students?: boolean;
+    inserts?: unknown[];
   }>;
 
   let cumulativeMinutes = DEFAULT_START_HOUR * 60 + DEFAULT_START_MINUTE;
@@ -86,6 +87,7 @@ export async function POST(
       external_link: b.external_link || null,
       economy_trigger: b.economy_trigger || null,
       visible_to_students: b.visible_to_students ?? true,
+      inserts: b.inserts || [],
     };
   });
 

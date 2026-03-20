@@ -50,6 +50,7 @@ export async function PUT(
       external_link?: unknown;
       economy_trigger?: unknown;
       visible_to_students?: boolean;
+      inserts?: unknown[];
     }>;
     dayType?: string;
   };
@@ -87,6 +88,7 @@ export async function PUT(
       external_link: b.external_link || null,
       economy_trigger: b.economy_trigger || null,
       visible_to_students: b.visible_to_students ?? true,
+      inserts: b.inserts || [],
     };
   });
 

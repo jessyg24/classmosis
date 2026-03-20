@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { Student } from "@/types/database";
 import InviteGuardianDialog from "@/components/teacher/invite-guardian-dialog";
+import ImportRosterDialog from "@/components/teacher/import-roster-dialog";
 
 export default function StudentsPage() {
   const { activeClassId } = useClassStore();
@@ -26,7 +27,7 @@ export default function StudentsPage() {
 
   // Dialog states
   const [addOpen, setAddOpen] = useState(false);
-  const [bulkOpen, setBulkOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Student | null>(null);
   const [inviteGuardianStudent, setInviteGuardianStudent] = useState<Student | null>(null);
@@ -35,11 +36,6 @@ export default function StudentsPage() {
   const [newName, setNewName] = useState("");
   const [addLoading, setAddLoading] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
-
-  // Bulk import
-  const [bulkNames, setBulkNames] = useState("");
-  const [bulkCount, setBulkCount] = useState(0);
-  const [bulkLoading, setBulkLoading] = useState(false);
 
   // Edit form
   const [editName, setEditName] = useState("");
@@ -74,26 +70,6 @@ export default function StudentsPage() {
 
     setAddSuccess(true);
     setAddLoading(false);
-    loadStudents();
-  };
-
-  const handleBulkImport = async () => {
-    if (!activeClassId) return;
-    const names = bulkNames.split("\n").map((n) => n.trim()).filter((n) => n);
-    if (!names.length) return;
-
-    setBulkLoading(true);
-    const supabase = createClient();
-
-    const rows = names.map((name) => ({
-      class_id: activeClassId,
-      display_name: name,
-    }));
-
-    await supabase.from("students").insert(rows);
-
-    setBulkCount(names.length);
-    setBulkLoading(false);
     loadStudents();
   };
 
@@ -152,10 +128,10 @@ export default function StudentsPage() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => { setBulkOpen(true); setBulkNames(""); setBulkCount(0); }}
+            onClick={() => setImportOpen(true)}
             className="rounded-cm-button"
           >
-            <Upload className="h-4 w-4 mr-2" /> Bulk import
+            <Upload className="h-4 w-4 mr-2" /> Import roster
           </Button>
           <Button
             onClick={() => { setAddOpen(true); setNewName(""); setAddSuccess(false); }}
@@ -258,50 +234,16 @@ export default function StudentsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Bulk Import Dialog */}
-      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
-        <DialogContent className="rounded-cm-modal max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Bulk import</DialogTitle>
-          </DialogHeader>
-          {bulkCount > 0 ? (
-            <div className="space-y-4">
-              <div className="bg-cm-teal-light p-4 rounded-cm-button text-center">
-                <p className="text-cm-body text-cm-teal-dark font-medium">
-                  {bulkCount} students added!
-                </p>
-              </div>
-              <p className="text-cm-caption text-cm-text-hint text-center">
-                They can join by entering today&apos;s class code and picking their name.
-              </p>
-              <Button onClick={() => setBulkOpen(false)} className="w-full rounded-cm-button">Done</Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Paste names (one per line)</Label>
-                <textarea
-                  value={bulkNames}
-                  onChange={(e) => setBulkNames(e.target.value)}
-                  rows={8}
-                  placeholder={"Emma Rodriguez\nLiam Chen\nSophia Patel"}
-                  className="w-full px-3 py-2 rounded-cm-button border border-cm-border text-cm-body placeholder:text-cm-text-hint focus:outline-none focus:ring-2 focus:ring-cm-teal/30 focus:border-cm-teal resize-none"
-                />
-                <p className="text-cm-caption text-cm-text-hint">
-                  {bulkNames.split("\n").filter((n) => n.trim()).length} names
-                </p>
-              </div>
-              <Button
-                onClick={handleBulkImport}
-                disabled={!bulkNames.trim() || bulkLoading}
-                className="w-full bg-cm-teal hover:bg-cm-teal-dark text-white rounded-cm-button"
-              >
-                {bulkLoading ? "Importing..." : "Import students"}
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Import Roster Dialog (CSV, Paste, Google Classroom) */}
+      {activeClassId && (
+        <ImportRosterDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          classId={activeClassId}
+          existingStudents={students.map((s) => ({ id: s.id, display_name: s.display_name }))}
+          onComplete={loadStudents}
+        />
+      )}
 
       {/* Edit Student Dialog */}
       <Dialog open={!!editStudent} onOpenChange={() => setEditStudent(null)}>
