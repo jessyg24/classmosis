@@ -12,42 +12,33 @@ import {
   type WoodColor,
   type InsertType,
 } from "@/types/schedule";
-import {
-  BookOpen,
-  Presentation,
-  Pencil,
-  MessageCircle,
-  Calculator,
-  ClipboardCheck,
-  PlayCircle,
-  Users,
-  User,
-  Sparkles,
-  FileCheck,
-  Plus,
-  Clock,
-} from "lucide-react";
+import { getSubRoutineDef } from "@/types/subroutine-catalog";
+import * as LucideIcons from "lucide-react";
+import { BookOpen } from "lucide-react";
 
-// ── Icon map for insert types ──────────────────────────────────
+// ── Icon resolver ──────────────────────────────────────────────
 
-const INSERT_ICON_MAP: Record<string, React.ComponentType<{ className?: string; style?: CSSProperties }>> = {
-  "presentation": Presentation,
-  "book-open": BookOpen,
-  "pencil": Pencil,
-  "message-circle": MessageCircle,
-  "calculator": Calculator,
-  "clipboard-check": ClipboardCheck,
-  "play-circle": PlayCircle,
-  "users": Users,
-  "user": User,
-  "sparkles": Sparkles,
-  "file-check": FileCheck,
-  "plus": Plus,
-  "clock": Clock,
-};
+const iconCache: Record<string, React.ComponentType<{ className?: string; style?: CSSProperties }>> = {};
 
-export function getInsertIcon(iconName: string) {
-  return INSERT_ICON_MAP[iconName] || BookOpen;
+export function getInsertIcon(iconName: string): React.ComponentType<{ className?: string; style?: CSSProperties }> {
+  if (iconCache[iconName]) return iconCache[iconName];
+
+  // Try PascalCase directly (catalog format: "BookOpen", "Zap", etc.)
+  const direct = (LucideIcons as Record<string, unknown>)[iconName];
+  if (typeof direct === "function" || (typeof direct === "object" && direct !== null)) {
+    iconCache[iconName] = direct as React.ComponentType<{ className?: string; style?: CSSProperties }>;
+    return iconCache[iconName];
+  }
+
+  // Try kebab-case to PascalCase conversion (old format: "book-open" → "BookOpen")
+  const pascal = iconName.split("-").map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join("");
+  const converted = (LucideIcons as Record<string, unknown>)[pascal];
+  if (typeof converted === "function" || (typeof converted === "object" && converted !== null)) {
+    iconCache[iconName] = converted as React.ComponentType<{ className?: string; style?: CSSProperties }>;
+    return iconCache[iconName];
+  }
+
+  return BookOpen;
 }
 
 // ── Wood style helpers ─────────────────────────────────────────
@@ -88,7 +79,8 @@ export const WoodInsertChip = forwardRef<HTMLDivElement, WoodInsertChipProps>(
   function WoodInsertChip({ insert, index, isActive, onClick, dragHandleProps, style: externalStyle, className = "" }, ref) {
     const { style: woodStyle, dark } = getInsertWoodStyle(index);
     const config = INSERT_CONFIG[insert.type as InsertType];
-    const IconComp = config ? getInsertIcon(config.icon) : BookOpen;
+    const subDef = !config ? getSubRoutineDef(insert.type) : null;
+    const IconComp = getInsertIcon(config?.icon || subDef?.icon || "book-open");
 
     return (
       <div
@@ -139,8 +131,10 @@ interface InsertPaletteChipProps {
 
 export function InsertPaletteChip({ type, index, dragRef, dragProps, isDragging }: InsertPaletteChipProps) {
   const config = INSERT_CONFIG[type];
+  const subDef = !config ? getSubRoutineDef(type) : null;
   const { style: woodStyle, dark } = getInsertWoodStyle(index);
-  const IconComp = getInsertIcon(config.icon);
+  const IconComp = getInsertIcon(config?.icon || subDef?.icon || "book-open");
+  const label = config?.label || subDef?.label || type;
 
   return (
     <div
@@ -161,7 +155,7 @@ export function InsertPaletteChip({ type, index, dragRef, dragProps, isDragging 
         className="relative text-[11px] font-medium"
         style={{ textShadow: "0 1px 1px rgba(0,0,0,0.2)" }}
       >
-        {config.label}
+        {label}
       </span>
     </div>
   );
