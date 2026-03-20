@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useClassStore } from "@/stores/class-store";
 import { useRubrics, usePublishAssignment } from "@/hooks/use-gradebook";
+import { useClassStandards, useLinkStandards } from "@/hooks/use-standards";
 import { useQueryClient } from "@tanstack/react-query";
 import { ASSIGNMENT_TYPES, GRADEBOOK_CATEGORIES } from "@/types/grading";
 import type { AssignmentType } from "@/types/database";
@@ -41,7 +42,9 @@ interface AssignmentFormProps {
 export default function AssignmentForm({ open, onOpenChange }: AssignmentFormProps) {
   const { activeClassId } = useClassStore();
   const { data: rubrics } = useRubrics(activeClassId);
+  const { data: standards } = useClassStandards(activeClassId);
   const publishMutation = usePublishAssignment(activeClassId);
+  const linkStandardsMutation = useLinkStandards(activeClassId);
   const qc = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [type, setType] = useState<AssignmentType>("classwork");
@@ -49,6 +52,8 @@ export default function AssignmentForm({ open, onOpenChange }: AssignmentFormPro
   const [rubricId, setRubricId] = useState<string>("");
   const [publishNow, setPublishNow] = useState(false);
   const [extraCredit, setExtraCredit] = useState(false);
+  const [selectedStandardIds, setSelectedStandardIds] = useState<Set<string>>(new Set());
+  const [standardsExpanded, setStandardsExpanded] = useState(false);
 
   const { register, handleSubmit, reset } = useForm<AssignmentFormData>({
     defaultValues: {
@@ -86,6 +91,14 @@ export default function AssignmentForm({ open, onOpenChange }: AssignmentFormPro
 
       const assignment = await res.json();
 
+      // Link standards if any selected
+      if (selectedStandardIds.size > 0) {
+        await linkStandardsMutation.mutateAsync({
+          assignmentId: assignment.id,
+          standardIds: Array.from(selectedStandardIds),
+        });
+      }
+
       if (publishNow) {
         await publishMutation.mutateAsync(assignment.id);
         toast.success("Assignment created and published");
@@ -100,6 +113,8 @@ export default function AssignmentForm({ open, onOpenChange }: AssignmentFormPro
       setRubricId("");
       setPublishNow(false);
       setExtraCredit(false);
+      setSelectedStandardIds(new Set());
+      setStandardsExpanded(false);
       onOpenChange(false);
     } catch {
       toast.error("Something went wrong creating the assignment");
@@ -170,6 +185,75 @@ export default function AssignmentForm({ open, onOpenChange }: AssignmentFormPro
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Standards Multi-Select */}
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setStandardsExpanded(!standardsExpanded)}
+              className="flex items-center gap-2 text-cm-label text-cm-text-primary"
+            >
+              <span>Standards</span>
+              {selectedStandardIds.size > 0 && (
+                <span className="px-1.5 py-0.5 rounded-cm-badge bg-cm-purple-light text-cm-purple text-cm-overline">
+                  {selectedStandardIds.size}
+                </span>
+              )}
+              <span className="text-cm-caption text-cm-text-hint">(optional)</span>
+            </button>
+            {standardsExpanded && (
+              <div className="max-h-48 overflow-y-auto border border-cm-border rounded-cm-button p-2 space-y-1">
+                {(() => {
+                  const grouped: Record<string, typeof standards> = {};
+                  for (const std of standards || []) {
+                    if (!grouped[std.domain]) grouped[std.domain] = [];
+                    grouped[std.domain]!.push(std);
+                  }
+                  return Object.entries(grouped).map(([domain, stds]) => (
+                    <div key={domain}>
+                      <p className="text-cm-overline text-cm-text-hint uppercase px-1 pt-1">{domain}</p>
+                      {(stds || []).map((std) => (
+                        <label key={std.id} className="flex items-center gap-2 px-1 py-1 hover:bg-cm-white rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedStandardIds.has(std.id)}
+                            onChange={(e) => {
+                              setSelectedStandardIds((prev) => {
+                                const next = new Set(prev);
+                                if (e.target.checked) next.add(std.id);
+                                else next.delete(std.id);
+                                return next;
+                              });
+                            }}
+                            className="rounded"
+                          />
+                          <span className="px-1.5 py-0.5 rounded-cm-badge bg-cm-purple-light text-cm-purple text-[10px] font-medium shrink-0">
+                            {std.code}
+                          </span>
+                          <span className="text-cm-caption text-cm-text-secondary truncate">{std.description}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ));
+                })()}
+                {(!standards || standards.length === 0) && (
+                  <p className="text-cm-caption text-cm-text-hint px-1 py-2">No standards available for this class.</p>
+                )}
+              </div>
+            )}
+            {/* Selected standards badges */}
+            {selectedStandardIds.size > 0 && !standardsExpanded && (
+              <div className="flex flex-wrap gap-1">
+                {(standards || [])
+                  .filter((s) => selectedStandardIds.has(s.id))
+                  .map((s) => (
+                    <span key={s.id} className="px-2 py-0.5 rounded-cm-badge bg-cm-purple-light text-cm-purple text-cm-overline font-medium">
+                      {s.code}
+                    </span>
+                  ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

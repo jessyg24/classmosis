@@ -5,7 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import { useClassStore } from "@/stores/class-store";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, BookOpen, Sparkles, Copy, Check, Calendar } from "lucide-react";
+import { Users, BookOpen, Sparkles, Copy, Check, Calendar, Target, Coins } from "lucide-react";
+import Link from "next/link";
+import { Progress } from "@/components/ui/progress";
 
 export default function DashboardPage() {
   const { activeClassId } = useClassStore();
@@ -16,6 +18,8 @@ export default function DashboardPage() {
   const [generatingCode, setGeneratingCode] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [scheduleSummary, setScheduleSummary] = useState<{ blockCount: number; totalMinutes: number } | null>(null);
+  const [topStandards, setTopStandards] = useState<Array<{ code: string; description: string; avgPct: number }>>([]);
+  const [economySummary, setEconomySummary] = useState<{ pendingCount: number; todayAwarded: number } | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -88,6 +92,61 @@ export default function DashboardPage() {
         } else {
           setScheduleSummary(null);
         }
+
+        // Fetch top standards with recent mastery data
+        const { data: studentsForMastery } = await supabase
+          .from("students")
+          .select("id")
+          .eq("class_id", activeClassId)
+          .is("archived_at", null);
+
+        const sIds = (studentsForMastery || []).map((s: { id: string }) => s.id);
+        if (sIds.length > 0) {
+          const { data: masteryRows } = await supabase
+            .from("student_mastery")
+            .select("standard_id, avg_pct, standards(code, description)")
+            .in("student_id", sIds)
+            .order("updated_at", { ascending: false })
+            .limit(50);
+
+          if (masteryRows && masteryRows.length > 0) {
+            // Aggregate by standard
+            const agg: Record<string, { code: string; description: string; total: number; count: number; latest: number }> = {};
+            for (const r of masteryRows as unknown as Array<{ standard_id: string; avg_pct: number | null; standards: { code: string; description: string } | null }>) {
+              if (r.avg_pct === null || !r.standards) continue;
+              if (!agg[r.standard_id]) {
+                agg[r.standard_id] = { code: r.standards.code, description: r.standards.description, total: 0, count: 0, latest: 0 };
+              }
+              agg[r.standard_id].total += r.avg_pct;
+              agg[r.standard_id].count += 1;
+            }
+            const top = Object.values(agg)
+              .map((a) => ({ code: a.code, description: a.description, avgPct: Math.round(a.total / a.count) }))
+              .sort((a, b) => b.avgPct - a.avgPct)
+              .slice(0, 5);
+            setTopStandards(top);
+          } else {
+            setTopStandards([]);
+          }
+        }
+
+        // Economy summary
+        const { count: pendingCount } = await supabase
+          .from("purchase_requests")
+          .select("*", { count: "exact", head: true })
+          .eq("class_id", activeClassId)
+          .eq("status", "pending");
+
+        const todayStr = new Date().toISOString().split("T")[0];
+        const { data: todayTxns } = await supabase
+          .from("economy_transactions")
+          .select("amount")
+          .eq("class_id", activeClassId)
+          .gt("created_at", todayStr)
+          .gt("amount", 0);
+
+        const todayAwarded = (todayTxns || []).reduce((sum: number, t: { amount: number }) => sum + t.amount, 0);
+        setEconomySummary({ pendingCount: pendingCount || 0, todayAwarded });
       }
     }
     load();
@@ -219,6 +278,63 @@ export default function DashboardPage() {
                 {scheduleSummary.totalMinutes % 60}m total
               </p>
             </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Economy Summary */}
+      {economySummary && (economySummary.pendingCount > 0 || economySummary.todayAwarded > 0) && (
+        <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-cm-3">
+              <div className="w-10 h-10 bg-cm-amber-light rounded-cm-button flex items-center justify-center">
+                <Coins className="h-5 w-5 text-cm-amber" />
+              </div>
+              <div>
+                <h2 className="text-cm-label text-cm-text-primary">Economy</h2>
+                <p className="text-cm-body text-cm-text-secondary">
+                  {economySummary.pendingCount > 0 && `${economySummary.pendingCount} pending request${economySummary.pendingCount !== 1 ? "s" : ""}`}
+                  {economySummary.pendingCount > 0 && economySummary.todayAwarded > 0 && " · "}
+                  {economySummary.todayAwarded > 0 && `${economySummary.todayAwarded} coins awarded today`}
+                </p>
+              </div>
+            </div>
+            <Link href="/economy" className="text-cm-caption text-cm-amber hover:underline">
+              Manage
+            </Link>
+          </div>
+        </Card>
+      )}
+
+      {/* Standards This Week */}
+      {topStandards.length > 0 && (
+        <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-cm-3">
+              <div className="w-10 h-10 bg-cm-purple-light rounded-cm-button flex items-center justify-center">
+                <Target className="h-5 w-5 text-cm-purple" />
+              </div>
+              <h2 className="text-cm-label text-cm-text-primary">Standards This Week</h2>
+            </div>
+            <Link href="/standards" className="text-cm-caption text-cm-purple hover:underline">
+              View all
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {topStandards.map((std) => (
+              <div key={std.code} className="flex items-center gap-cm-3">
+                <span className="shrink-0 px-2 py-0.5 rounded-cm-badge bg-cm-purple-light text-cm-purple text-cm-overline font-medium">
+                  {std.code}
+                </span>
+                <span className="flex-1 text-cm-caption text-cm-text-secondary truncate">
+                  {std.description}
+                </span>
+                <div className="shrink-0 w-24 flex items-center gap-2">
+                  <Progress value={std.avgPct} className="h-2 flex-1" />
+                  <span className="text-cm-caption text-cm-purple font-medium">{std.avgPct}%</span>
+                </div>
+              </div>
+            ))}
           </div>
         </Card>
       )}

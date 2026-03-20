@@ -4,10 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PortalShell from "@/components/shared/portal-shell";
 import { Card } from "@/components/ui/card";
-import { Target } from "lucide-react";
 import CurrentBlock from "@/components/portal/current-block";
 import MyWork from "@/components/portal/my-work";
 import MyGrades from "@/components/portal/my-grades";
+import MySkills from "@/components/portal/my-skills";
+import MyPractice from "@/components/portal/my-practice";
+import MyWallet from "@/components/portal/my-wallet";
 import type { Block } from "@/types/database";
 
 interface StudentData {
@@ -106,21 +108,17 @@ export default function PortalHomePage() {
         {/* My Work */}
         <MyWork />
 
+        {/* My Practice */}
+        <MyPractice studentId={student.id} />
+
         {/* My Grades */}
         <MyGrades />
 
-        {/* My Goals */}
-        <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border">
-          <div className="flex items-center gap-cm-3 mb-3">
-            <div className="w-8 h-8 bg-cm-purple-light rounded-cm-badge flex items-center justify-center">
-              <Target className="h-4 w-4 text-cm-purple" />
-            </div>
-            <span className="text-cm-overline text-cm-text-hint uppercase">My Goals</span>
-          </div>
-          <p className="text-cm-body text-cm-text-secondary">
-            Your goals and progress will show up here. Keep going!
-          </p>
-        </Card>
+        {/* My Skills */}
+        <MySkills studentId={student.id} />
+
+        {/* My Wallet */}
+        <MyWallet studentId={student.id} />
       </div>
     </PortalShell>
   );

@@ -29,10 +29,10 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, ready: true },
   { href: "/schedule", label: "Schedule", icon: Calendar, ready: true },
   { href: "/gradebook", label: "Gradebook", icon: BookOpen, ready: true },
-  { href: "/practice", label: "Practice", icon: Brain, ready: false },
-  { href: "/economy", label: "Economy", icon: Coins, ready: false },
+  { href: "/practice", label: "Practice", icon: Brain, ready: true },
+  { href: "/economy", label: "Economy", icon: Coins, ready: true },
   { href: "/students", label: "Students", icon: Users, ready: true },
-  { href: "/standards", label: "Standards", icon: Target, ready: false },
+  { href: "/standards", label: "Standards", icon: Target, ready: true },
   { href: "/settings", label: "Settings", icon: Settings, ready: true },
 ];
 

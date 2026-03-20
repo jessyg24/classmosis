@@ -38,8 +38,6 @@ export interface Student {
   id: string;
   class_id: string;
   display_name: string;
-  pin_hash: string;
-  google_id: string | null;
   coin_balance: number;
   streak_count: number;
   grade_level: string | null;
@@ -86,6 +84,29 @@ export type BlockType = "routine" | "academic" | "assessment" | "economy" | "fle
 export type DayType = "normal" | "minimum_day" | "testing" | "field_trip" | "assembly" | "substitute";
 export type TimerBehavior = "auto_start" | "manual" | "none";
 
+export type InsertType =
+  | "teacher_instruction"
+  | "reading"
+  | "writing"
+  | "discussion"
+  | "practice"
+  | "exit_ticket"
+  | "video_media"
+  | "group_work"
+  | "independent_work"
+  | "brain_break"
+  | "assessment"
+  | "custom";
+
+export interface Insert {
+  id: string;
+  type: InsertType;
+  label: string;
+  duration_minutes: number | null;
+  order_index: number;
+  settings: Record<string, unknown> | null;
+}
+
 export interface Schedule {
   id: string;
   class_id: string;
@@ -112,6 +133,7 @@ export interface Block {
   external_link: { url: string; platform_name: string; icon?: string } | null;
   economy_trigger: { coins: number; trigger_type: string } | null;
   visible_to_students: boolean;
+  inserts: Insert[];
   created_at: string;
 }
 
@@ -232,6 +254,177 @@ export interface StudentFeedback {
   proud_flag: boolean;
   student_reply: string | null;
   reply_at: string | null;
+}
+
+// ============================================================
+// Standards Types (Sprint 5)
+// ============================================================
+
+export type MasteryLevel = "building" | "almost_there" | "got_it" | "crushed_it";
+
+export interface Standard {
+  id: string;
+  class_id: string | null;
+  code: string;
+  description: string;
+  subject: Subject;
+  grade_band: GradeBand;
+  domain: string;
+  sort_key: string;
+  created_at: string;
+}
+
+export interface AssignmentStandard {
+  id: string;
+  assignment_id: string;
+  standard_id: string;
+  standard?: Standard;
+}
+
+export interface StudentMastery {
+  id: string;
+  student_id: string;
+  standard_id: string;
+  attempts: number;
+  avg_pct: number | null;
+  mastery_level: MasteryLevel;
+  last_assessed_at: string | null;
+  updated_at: string;
+  standard?: Standard;
+  student?: Pick<Student, "id" | "display_name">;
+}
+
+// ============================================================
+// Economy Types (Sprint 6)
+// ============================================================
+
+export type TransactionCategory =
+  | "manual"
+  | "block_reward"
+  | "purchase"
+  | "purchase_refund"
+  | "bulk"
+  | "adjustment";
+
+export type PurchaseStatus = "pending" | "approved" | "denied" | "cancelled";
+
+export interface EconomyTransaction {
+  id: string;
+  class_id: string;
+  student_id: string;
+  amount: number;
+  balance_after: number;
+  reason: string;
+  category: TransactionCategory;
+  source_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  student?: Pick<Student, "id" | "display_name">;
+}
+
+export interface RewardStoreItem {
+  id: string;
+  class_id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  icon: string;
+  stock: number | null;
+  active: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface PurchaseRequest {
+  id: string;
+  class_id: string;
+  student_id: string;
+  item_id: string;
+  price_at_request: number;
+  status: PurchaseStatus;
+  teacher_note: string | null;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  created_at: string;
+  student?: Pick<Student, "id" | "display_name">;
+  item?: Pick<RewardStoreItem, "id" | "title" | "icon" | "price">;
+}
+
+export interface EconomySettings {
+  id: string;
+  class_id: string;
+  leaderboard_visible: boolean;
+  negative_balance: boolean;
+  auto_approve: boolean;
+  weekly_allowance: number;
+  created_at: string;
+}
+
+// ============================================================
+// Practice Types (Sprint 7)
+// ============================================================
+
+export type QuestionType = "multiple_choice" | "true_false" | "short_answer";
+export type PracticeSessionStatus = "in_progress" | "completed" | "abandoned";
+
+export interface PracticeSet {
+  id: string;
+  class_id: string;
+  title: string;
+  description: string | null;
+  published: boolean;
+  shuffle_questions: boolean;
+  allow_retries: boolean;
+  show_correct_after: boolean;
+  coins_reward: number;
+  created_at: string;
+  updated_at: string;
+  standards?: Standard[];
+  question_count?: number;
+}
+
+export interface PracticeSetStandard {
+  id: string;
+  practice_set_id: string;
+  standard_id: string;
+  standard?: Standard;
+}
+
+export interface PracticeQuestion {
+  id: string;
+  practice_set_id: string;
+  question_type: QuestionType;
+  prompt: string;
+  options: string[] | null;
+  correct_answer: string;
+  explanation: string | null;
+  order_index: number;
+  ai_generated: boolean;
+  created_at: string;
+}
+
+export interface PracticeSession {
+  id: string;
+  student_id: string;
+  practice_set_id: string;
+  status: PracticeSessionStatus;
+  total_questions: number;
+  correct_count: number;
+  pct_score: number | null;
+  started_at: string;
+  completed_at: string | null;
+  coins_awarded: number;
+  practice_set?: PracticeSet;
+  student?: Pick<Student, "id" | "display_name">;
+}
+
+export interface PracticeResponse {
+  id: string;
+  session_id: string;
+  question_id: string;
+  student_answer: string;
+  is_correct: boolean;
+  answered_at: string;
 }
 
 // Teacher profile (extends Supabase auth.users via user_metadata)

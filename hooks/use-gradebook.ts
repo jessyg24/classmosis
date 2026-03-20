@@ -90,9 +90,14 @@ export function useGradeSubmission(classId: string | null, assignmentId: string)
       if (!res.ok) throw new Error("Failed to save grade");
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       qc.invalidateQueries({ queryKey: ["gradebook", classId] });
       qc.invalidateQueries({ queryKey: ["submissions", assignmentId] });
+      // Recalculate mastery after grading
+      if (classId) {
+        await fetch(`/api/v1/classes/${classId}/mastery/recalculate`, { method: "POST" });
+        qc.invalidateQueries({ queryKey: ["mastery", classId] });
+      }
     },
   });
 }
