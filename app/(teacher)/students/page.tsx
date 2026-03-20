@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useClassStore } from "@/stores/class-store";
-import { generatePin, hashPin } from "@/lib/utils/pin";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,13 +12,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   UserPlus,
   Upload,
-  RotateCcw,
   Pencil,
   Trash2,
-  Copy,
-  Check,
+  Users2,
 } from "lucide-react";
 import type { Student } from "@/types/database";
+import InviteGuardianDialog from "@/components/teacher/invite-guardian-dialog";
 
 export default function StudentsPage() {
   const { activeClassId } = useClassStore();
@@ -30,19 +28,18 @@ export default function StudentsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
-  const [pinResetResult, setPinResetResult] = useState<{ name: string; pin: string } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Student | null>(null);
+  const [inviteGuardianStudent, setInviteGuardianStudent] = useState<Student | null>(null);
 
   // Add student form
   const [newName, setNewName] = useState("");
-  const [newPin, setNewPin] = useState<string | null>(null);
   const [addLoading, setAddLoading] = useState(false);
+  const [addSuccess, setAddSuccess] = useState(false);
 
   // Bulk import
   const [bulkNames, setBulkNames] = useState("");
-  const [bulkResults, setBulkResults] = useState<Array<{ name: string; pin: string }>>([]);
+  const [bulkCount, setBulkCount] = useState(0);
   const [bulkLoading, setBulkLoading] = useState(false);
-  const [bulkCopied, setBulkCopied] = useState(false);
 
   // Edit form
   const [editName, setEditName] = useState("");
@@ -68,17 +65,14 @@ export default function StudentsPage() {
   const handleAddStudent = async () => {
     if (!activeClassId || !newName.trim()) return;
     setAddLoading(true);
-    const pin = generatePin();
-    const pinHash = await hashPin(pin);
     const supabase = createClient();
 
     await supabase.from("students").insert({
       class_id: activeClassId,
       display_name: newName.trim(),
-      pin_hash: pinHash,
     });
 
-    setNewPin(pin);
+    setAddSuccess(true);
     setAddLoading(false);
     loadStudents();
   };
@@ -90,31 +84,17 @@ export default function StudentsPage() {
 
     setBulkLoading(true);
     const supabase = createClient();
-    const results: Array<{ name: string; pin: string }> = [];
 
-    for (const name of names) {
-      const pin = generatePin();
-      const pinHash = await hashPin(pin);
-      await supabase.from("students").insert({
-        class_id: activeClassId,
-        display_name: name,
-        pin_hash: pinHash,
-      });
-      results.push({ name, pin });
-    }
+    const rows = names.map((name) => ({
+      class_id: activeClassId,
+      display_name: name,
+    }));
 
-    setBulkResults(results);
+    await supabase.from("students").insert(rows);
+
+    setBulkCount(names.length);
     setBulkLoading(false);
     loadStudents();
-  };
-
-  const handleResetPin = async (student: Student) => {
-    const pin = generatePin();
-    const pinHash = await hashPin(pin);
-    const supabase = createClient();
-
-    await supabase.from("students").update({ pin_hash: pinHash }).eq("id", student.id);
-    setPinResetResult({ name: student.display_name, pin });
   };
 
   const handleEdit = async () => {
@@ -152,13 +132,6 @@ export default function StudentsPage() {
     });
   };
 
-  const handleCopyBulk = async () => {
-    const text = bulkResults.map((r) => `${r.name}\t${r.pin}`).join("\n");
-    await navigator.clipboard.writeText(text);
-    setBulkCopied(true);
-    setTimeout(() => setBulkCopied(false), 2000);
-  };
-
   if (!activeClassId) {
     return (
       <div className="text-center py-16">
@@ -179,13 +152,13 @@ export default function StudentsPage() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => { setBulkOpen(true); setBulkNames(""); setBulkResults([]); }}
+            onClick={() => { setBulkOpen(true); setBulkNames(""); setBulkCount(0); }}
             className="rounded-cm-button"
           >
             <Upload className="h-4 w-4 mr-2" /> Bulk import
           </Button>
           <Button
-            onClick={() => { setAddOpen(true); setNewName(""); setNewPin(null); }}
+            onClick={() => { setAddOpen(true); setNewName(""); setAddSuccess(false); }}
             className="bg-cm-teal hover:bg-cm-teal-dark text-white rounded-cm-button"
           >
             <UserPlus className="h-4 w-4 mr-2" /> Add student
@@ -227,11 +200,11 @@ export default function StudentsPage() {
                   {s.ell_flag && <Badge variant="outline" className="text-[10px] border-cm-blue text-cm-blue">ELL</Badge>}
                 </div>
                 <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-cm-purple" onClick={() => setInviteGuardianStudent(s)} title="Invite guardian">
+                    <Users2 className="h-3.5 w-3.5" />
+                  </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(s)}>
                     <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleResetPin(s)}>
-                    <RotateCcw className="h-3.5 w-3.5" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-cm-coral" onClick={() => setDeleteConfirm(s)}>
                     <Trash2 className="h-3.5 w-3.5" />
@@ -249,16 +222,15 @@ export default function StudentsPage() {
           <DialogHeader>
             <DialogTitle>Add student</DialogTitle>
           </DialogHeader>
-          {newPin ? (
+          {addSuccess ? (
             <div className="space-y-4">
               <div className="bg-cm-teal-light p-4 rounded-cm-button text-center">
-                <p className="text-cm-body text-cm-teal-dark mb-1">
-                  {newName}&apos;s PIN:
+                <p className="text-cm-body text-cm-teal-dark font-medium">
+                  {newName} added!
                 </p>
-                <p className="text-2xl font-mono font-bold text-cm-teal-dark">{newPin}</p>
               </div>
               <p className="text-cm-caption text-cm-text-hint text-center">
-                This PIN won&apos;t be shown again. Copy it now.
+                They can join by entering today&apos;s class code and picking their name.
               </p>
               <Button onClick={() => setAddOpen(false)} className="w-full rounded-cm-button">
                 Done
@@ -292,26 +264,16 @@ export default function StudentsPage() {
           <DialogHeader>
             <DialogTitle>Bulk import</DialogTitle>
           </DialogHeader>
-          {bulkResults.length > 0 ? (
+          {bulkCount > 0 ? (
             <div className="space-y-4">
-              <div className="bg-cm-teal-light p-3 rounded-cm-button">
+              <div className="bg-cm-teal-light p-4 rounded-cm-button text-center">
                 <p className="text-cm-body text-cm-teal-dark font-medium">
-                  {bulkResults.length} students added!
+                  {bulkCount} students added!
                 </p>
               </div>
-              <div className="border border-cm-border rounded-cm-button overflow-hidden max-h-64 overflow-y-auto">
-                <div className="flex justify-end px-3 py-1 bg-cm-white border-b border-cm-border">
-                  <Button variant="ghost" size="sm" onClick={handleCopyBulk} className="text-cm-caption">
-                    {bulkCopied ? <><Check className="h-3 w-3 mr-1" /> Copied</> : <><Copy className="h-3 w-3 mr-1" /> Copy all</>}
-                  </Button>
-                </div>
-                {bulkResults.map((r, i) => (
-                  <div key={i} className="flex justify-between px-3 py-1.5 border-b border-cm-border last:border-0">
-                    <span className="text-cm-body">{r.name}</span>
-                    <span className="text-cm-body font-mono text-cm-purple">{r.pin}</span>
-                  </div>
-                ))}
-              </div>
+              <p className="text-cm-caption text-cm-text-hint text-center">
+                They can join by entering today&apos;s class code and picking their name.
+              </p>
               <Button onClick={() => setBulkOpen(false)} className="w-full rounded-cm-button">Done</Button>
             </div>
           ) : (
@@ -382,33 +344,6 @@ export default function StudentsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* PIN Reset Result */}
-      <Dialog open={!!pinResetResult} onOpenChange={() => setPinResetResult(null)}>
-        <DialogContent className="rounded-cm-modal">
-          <DialogHeader>
-            <DialogTitle>PIN reset</DialogTitle>
-          </DialogHeader>
-          {pinResetResult && (
-            <div className="space-y-4">
-              <div className="bg-cm-teal-light p-4 rounded-cm-button text-center">
-                <p className="text-cm-body text-cm-teal-dark mb-1">
-                  {pinResetResult.name}&apos;s new PIN:
-                </p>
-                <p className="text-2xl font-mono font-bold text-cm-teal-dark">
-                  {pinResetResult.pin}
-                </p>
-              </div>
-              <p className="text-cm-caption text-cm-text-hint text-center">
-                This PIN won&apos;t be shown again.
-              </p>
-              <Button onClick={() => setPinResetResult(null)} className="w-full rounded-cm-button">
-                Done
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
       {/* Delete Confirm */}
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <DialogContent className="rounded-cm-modal">
@@ -428,6 +363,17 @@ export default function StudentsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Invite Guardian Dialog */}
+      {activeClassId && inviteGuardianStudent && (
+        <InviteGuardianDialog
+          open={!!inviteGuardianStudent}
+          onOpenChange={(open) => { if (!open) setInviteGuardianStudent(null); }}
+          classId={activeClassId}
+          studentId={inviteGuardianStudent.id}
+          studentName={inviteGuardianStudent.display_name}
+        />
+      )}
     </div>
   );
 }

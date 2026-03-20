@@ -46,11 +46,35 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Protect parent routes (except join page)
+  const isParentRoute = request.nextUrl.pathname.startsWith("/family") &&
+    !request.nextUrl.pathname.startsWith("/family/join");
+
+  if (isParentRoute && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
   // Redirect logged-in users away from auth pages
   const isAuthRoute = request.nextUrl.pathname === "/login" ||
     request.nextUrl.pathname === "/signup";
 
   if (isAuthRoute && user) {
+    // Check if user is a parent
+    const { data: guardianRows } = await supabase
+      .from("parent_guardians")
+      .select("id")
+      .eq("user_id", user.id)
+      .not("accepted_at", "is", null)
+      .limit(1);
+
+    if (guardianRows && guardianRows.length > 0) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/family";
+      return NextResponse.redirect(url);
+    }
+
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

@@ -570,6 +570,29 @@ export interface FeedbackTemplate {
   created_at: string;
 }
 
+// ============================================================
+// Parent Guardian Types (Sprint 6)
+// ============================================================
+
+export interface ParentGuardian {
+  id: string;
+  user_id: string | null;
+  student_id: string;
+  relationship: string;
+  preferred_language: string;
+  notification_preferences: {
+    weekly_digest: boolean;
+    grade_alert: boolean;
+    missing_alert: boolean;
+  };
+  custody_restricted: boolean;
+  invite_token: string | null;
+  invite_expires_at: string | null;
+  accepted_at: string | null;
+  created_at: string;
+  student?: Pick<Student, "id" | "display_name" | "coin_balance" | "streak_count">;
+}
+
 // Teacher profile (extends Supabase auth.users via user_metadata)
 export interface TeacherProfile {
   id: string;
