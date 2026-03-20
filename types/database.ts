@@ -484,6 +484,92 @@ export interface PracticeResponse {
   answered_at: string;
 }
 
+// ============================================================
+// AI Types (Sprint 5)
+// ============================================================
+
+export interface AiScoreDraft {
+  id: string;
+  submission_id: string;
+  rubric_id: string;
+  category_scores: Array<{
+    category_id: string;
+    name: string;
+    points_awarded: number;
+    max: number;
+    reasoning: string;
+    confidence: number;
+  }>;
+  total_raw: number;
+  total_pct: number;
+  model_version: string;
+  generated_at: string;
+  flagged_for_review: boolean;
+  flag_reason: string | null;
+  teacher_action: "pending" | "approved" | "edited" | "rejected";
+  teacher_acted_at: string | null;
+  created_at: string;
+}
+
+export interface AiUsage {
+  id: string;
+  teacher_id: string;
+  class_id: string;
+  date: string;
+  call_count: number;
+  call_type: string;
+  created_at: string;
+}
+
+export interface RubricTemplate {
+  id: string;
+  title: string;
+  description: string | null;
+  subject: Subject;
+  grade_band: GradeBand;
+  assignment_type: string;
+  total_points: number;
+  categories: Array<{
+    name: string;
+    max_points: number;
+    weight_pct: number;
+    descriptors: Record<string, string>;
+  }>;
+  standard_codes: string[] | null;
+  ai_generated: boolean;
+  contributed_by: string | null;
+  usage_count: number;
+  created_at: string;
+}
+
+export interface ProblemBankItem {
+  id: string;
+  subject: Subject;
+  grade_band: GradeBand;
+  standard_code: string | null;
+  question_type: QuestionType;
+  difficulty: number;
+  prompt: string;
+  options: string[] | null;
+  correct_answer: string;
+  explanation: string | null;
+  hint: string | null;
+  ai_generated: boolean;
+  contributed_by: string | null;
+  usage_count: number;
+  created_at: string;
+}
+
+export interface FeedbackTemplate {
+  id: string;
+  subject: Subject;
+  grade_band: GradeBand;
+  score_range: "low" | "mid" | "high";
+  template: string;
+  ai_generated: boolean;
+  created_at: string;
+}
+
 // Teacher profile (extends Supabase auth.users via user_metadata)
 export interface TeacherProfile {
   id: string;

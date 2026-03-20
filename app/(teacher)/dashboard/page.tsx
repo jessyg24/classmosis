@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Users, BookOpen, Sparkles, Copy, Check, Calendar, Target, Coins } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
+import { useMorningBrief } from "@/hooks/use-ai";
 
 export default function DashboardPage() {
   const { activeClassId } = useClassStore();
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const [scheduleSummary, setScheduleSummary] = useState<{ blockCount: number; totalMinutes: number } | null>(null);
   const [topStandards, setTopStandards] = useState<Array<{ code: string; description: string; avgPct: number }>>([]);
   const [economySummary, setEconomySummary] = useState<{ pendingCount: number; todayAwarded: number } | null>(null);
+  const { data: morningBrief } = useMorningBrief(activeClassId);
 
   useEffect(() => {
     async function load() {
@@ -339,7 +341,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Morning Brief Placeholder */}
+      {/* Morning Brief */}
       <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border">
         <div className="flex items-start gap-cm-3">
           <div className="w-10 h-10 bg-cm-pink-light rounded-cm-button flex items-center justify-center shrink-0">
@@ -347,10 +349,16 @@ export default function DashboardPage() {
           </div>
           <div>
             <h2 className="text-cm-label text-cm-text-primary">Morning Brief</h2>
-            <p className="text-cm-body text-cm-text-secondary mt-1">
-              Your AI-powered morning brief will appear here once you start using
-              Classmosis — tracking assignments, grades, and student progress.
-            </p>
+            {morningBrief?.brief ? (
+              <p className="text-cm-body text-cm-text-secondary mt-1 whitespace-pre-line">
+                {morningBrief.brief}
+              </p>
+            ) : (
+              <p className="text-cm-body text-cm-text-secondary mt-1">
+                Your AI-powered morning brief will appear here once you add your
+                Anthropic API key and start tracking assignments, grades, and student progress.
+              </p>
+            )}
           </div>
         </div>
       </Card>

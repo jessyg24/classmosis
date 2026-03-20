@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { useClassStore } from "@/stores/class-store";
 import { usePracticeQuestions, useDeleteQuestion, usePublishPracticeSet } from "@/hooks/use-practice";
 import QuestionForm from "@/components/practice/question-form";
+import AiQuestionGenerator from "@/components/practice/ai-question-generator";
 
 const TYPE_LABELS: Record<string, string> = {
   multiple_choice: "MC",
@@ -24,6 +25,7 @@ export default function PracticeSetDetailPage() {
   const deleteMutation = useDeleteQuestion(activeClassId, practiceSetId);
   const publishMutation = usePublishPracticeSet(activeClassId);
   const [addOpen, setAddOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
 
 
   const handleDelete = async (questionId: string) => {
@@ -60,6 +62,14 @@ export default function PracticeSetDetailPage() {
           </span>
         </div>
         <div className="flex gap-2">
+          <Button
+            onClick={() => setAiOpen(true)}
+            variant="outline"
+            className="border-cm-pink text-cm-pink hover:bg-cm-pink-light rounded-cm-button"
+          >
+            <Sparkles className="h-4 w-4 mr-1" />
+            AI Generate
+          </Button>
           <Button
             onClick={() => setAddOpen(true)}
             className="bg-cm-pink hover:bg-cm-pink-dark text-white rounded-cm-button"
@@ -141,6 +151,15 @@ export default function PracticeSetDetailPage() {
         classId={activeClassId}
         practiceSetId={practiceSetId}
       />
+
+      {activeClassId && (
+        <AiQuestionGenerator
+          open={aiOpen}
+          onOpenChange={setAiOpen}
+          classId={activeClassId}
+          practiceSetId={practiceSetId}
+        />
+      )}
     </div>
   );
 }
