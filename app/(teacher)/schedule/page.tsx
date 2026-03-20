@@ -65,10 +65,11 @@ export default function SchedulePage() {
   const [dragActiveId, setDragActiveId] = useState<string | null>(null);
 
   // Template state
-  const [templates, setTemplates] = useState<Array<{ id: string; name: string }>>([]);
+  const [templates, setTemplates] = useState<Array<{ id: string; name: string; days_of_week?: string[] }>>([]);
   const [showTemplates, setShowTemplates] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [templateDays, setTemplateDays] = useState<Set<string>>(new Set());
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -184,7 +185,7 @@ export default function SchedulePage() {
       const res = await fetch(`/api/v1/classes/${activeClassId}/templates`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: templateName.trim(), blocks: blocksForTemplate }),
+        body: JSON.stringify({ name: templateName.trim(), blocks: blocksForTemplate, days_of_week: Array.from(templateDays) }),
       });
       const data = await res.json();
       if (data.template) {
@@ -195,6 +196,7 @@ export default function SchedulePage() {
       toast.error("Failed to save template");
     }
     setTemplateName("");
+    setTemplateDays(new Set());
     setShowSaveTemplate(false);
   };
 
@@ -465,7 +467,7 @@ export default function SchedulePage() {
             Save as
           </Button>
           {showSaveTemplate && (
-            <div className="absolute right-0 top-full mt-1 bg-cm-surface border border-cm-border rounded-cm-button shadow-lg p-cm-3 z-20 w-56">
+            <div className="absolute right-0 top-full mt-1 bg-cm-surface border border-cm-border rounded-cm-button shadow-lg p-cm-3 z-20 w-64">
               <input
                 type="text"
                 placeholder="Template name..."
@@ -478,6 +480,28 @@ export default function SchedulePage() {
                   if (e.key === "Escape") setShowSaveTemplate(false);
                 }}
               />
+              <p className="text-[10px] text-cm-text-hint uppercase tracking-wider mb-1">Days this template applies to</p>
+              <div className="flex flex-wrap gap-1 mb-2">
+                {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => setTemplateDays((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(day)) next.delete(day);
+                      else next.add(day);
+                      return next;
+                    })}
+                    className={`px-2 py-0.5 rounded-cm-badge text-[10px] font-medium transition-colors ${
+                      templateDays.has(day)
+                        ? "bg-cm-teal text-white"
+                        : "bg-cm-white text-cm-text-hint border border-cm-border"
+                    }`}
+                  >
+                    {day.slice(0, 3)}
+                  </button>
+                ))}
+              </div>
               <Button
                 size="sm"
                 onClick={handleSaveTemplate}
@@ -502,14 +526,23 @@ export default function SchedulePage() {
             Load
           </Button>
           {showTemplates && templates.length > 0 && (
-            <div className="absolute right-0 top-full mt-1 bg-cm-surface border border-cm-border rounded-cm-button shadow-lg z-20 w-56 max-h-48 overflow-y-auto">
+            <div className="absolute right-0 top-full mt-1 bg-cm-surface border border-cm-border rounded-cm-button shadow-lg z-20 w-64 max-h-56 overflow-y-auto">
               {templates.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => handleLoadTemplate(t.id)}
-                  className="w-full text-left px-cm-3 py-cm-2 text-cm-body hover:bg-cm-white transition-colors"
+                  className="w-full text-left px-cm-3 py-cm-2 hover:bg-cm-white transition-colors"
                 >
-                  {t.name}
+                  <p className="text-cm-body text-cm-text-primary">{t.name}</p>
+                  {t.days_of_week && t.days_of_week.length > 0 && (
+                    <div className="flex gap-0.5 mt-0.5">
+                      {t.days_of_week.map((d) => (
+                        <span key={d} className="px-1 py-0 rounded bg-cm-teal-light text-cm-teal text-[9px] font-medium">
+                          {d.slice(0, 3)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </button>
               ))}
             </div>

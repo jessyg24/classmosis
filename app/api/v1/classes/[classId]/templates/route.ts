@@ -56,7 +56,7 @@ export async function POST(
     return NextResponse.json({ error: "Class not found" }, { status: 404 });
   }
 
-  const { name, blocks } = await request.json();
+  const { name, blocks, days_of_week } = await request.json();
 
   if (!name || !blocks) {
     return NextResponse.json({ error: "name and blocks required" }, { status: 400 });
@@ -68,6 +68,7 @@ export async function POST(
       class_id: classId,
       name,
       blocks_json: blocks,
+      days_of_week: days_of_week || [],
     })
     .select()
     .single();
