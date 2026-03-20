@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 export const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -15,7 +15,6 @@ export const signupSchema = z.object({
 export const studentLoginSchema = z.object({
   classCode: z.string().length(4, "Class code must be 4 digits").regex(/^\d{4}$/, "Class code must be 4 digits"),
   studentId: z.string().uuid(),
-  pin: z.string().length(4, "PIN must be 4 digits").regex(/^\d{4}$/, "PIN must be 4 digits"),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
