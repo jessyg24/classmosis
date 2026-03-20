@@ -9,6 +9,7 @@ import MyWork from "@/components/portal/my-work";
 import MyGrades from "@/components/portal/my-grades";
 import MySkills from "@/components/portal/my-skills";
 import MyPractice from "@/components/portal/my-practice";
+import MyTodos from "@/components/portal/my-todos";
 import MyWallet from "@/components/portal/my-wallet";
 import type { Block } from "@/types/database";
 
@@ -113,6 +114,9 @@ export default function PortalHomePage() {
 
         {/* My Grades */}
         <MyGrades />
+
+        {/* My Todos */}
+        <MyTodos studentId={student.id} />
 
         {/* My Skills */}
         <MySkills studentId={student.id} />

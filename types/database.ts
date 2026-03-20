@@ -47,6 +47,8 @@ export interface Student {
   gate_flag: boolean;
   ell_flag: boolean;
   daily_status: DailyStatus;
+  active_job_id: string | null;
+  active_job_multiplier: number;
   created_at: string;
   archived_at: string | null;
 }
@@ -304,7 +306,9 @@ export type TransactionCategory =
   | "purchase"
   | "purchase_refund"
   | "bulk"
-  | "adjustment";
+  | "adjustment"
+  | "todo_complete"
+  | "mystery_bonus";
 
 export type PurchaseStatus = "pending" | "approved" | "denied" | "cancelled";
 
@@ -318,6 +322,9 @@ export interface EconomyTransaction {
   category: TransactionCategory;
   source_id: string | null;
   created_by: string | null;
+  base_amount: number;
+  job_multiplier: number;
+  mystery_multiplier: number;
   created_at: string;
   student?: Pick<Student, "id" | "display_name">;
 }
@@ -345,6 +352,8 @@ export interface PurchaseRequest {
   teacher_note: string | null;
   resolved_at: string | null;
   resolved_by: string | null;
+  fulfilled: boolean;
+  fulfilled_at: string | null;
   created_at: string;
   student?: Pick<Student, "id" | "display_name">;
   item?: Pick<RewardStoreItem, "id" | "title" | "icon" | "price">;
@@ -358,6 +367,54 @@ export interface EconomySettings {
   auto_approve: boolean;
   weekly_allowance: number;
   created_at: string;
+}
+
+export type JobRotation = "daily" | "weekly" | "teacher_assigned" | "random";
+
+export interface ClassJob {
+  id: string;
+  class_id: string;
+  title: string;
+  description: string | null;
+  coin_multiplier: number;
+  rotation: JobRotation;
+  current_holder_id: string | null;
+  expires_at: string | null;
+  active: boolean;
+  sort_order: number;
+  created_at: string;
+  current_holder?: Pick<Student, "id" | "display_name">;
+}
+
+export interface MysteryStudentRecord {
+  id: string;
+  class_id: string;
+  date: string;
+  selected_student_id: string;
+  day_earnings_before: number;
+  multiplier: number;
+  bonus_payout: number;
+  revealed_at: string | null;
+  teacher_note: string | null;
+  created_at: string;
+  student?: Pick<Student, "id" | "display_name">;
+}
+
+export type TodoSource = "student" | "teacher";
+
+export interface TodoItem {
+  id: string;
+  student_id: string;
+  class_id: string;
+  title: string;
+  source: TodoSource;
+  coin_eligible: boolean;
+  coins_on_complete: number;
+  completed: boolean;
+  completed_at: string | null;
+  due_date: string | null;
+  created_at: string;
+  student?: Pick<Student, "id" | "display_name">;
 }
 
 // ============================================================

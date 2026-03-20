@@ -17,6 +17,8 @@ interface AwardParams {
   category: TransactionCategory;
   sourceId?: string;
   createdBy?: string;
+  skipJobMultiplier?: boolean;
+  mysteryMultiplier?: number;
 }
 
 export async function awardCoins({
@@ -28,9 +30,32 @@ export async function awardCoins({
   category,
   sourceId,
   createdBy,
+  skipJobMultiplier,
+  mysteryMultiplier,
 }: AwardParams): Promise<EconomyTransaction> {
+  const baseAmount = amount;
+  let jobMultiplier = 1;
+  const mystMult = mysteryMultiplier || 1;
+
+  // Look up job multiplier unless skipped
+  if (!skipJobMultiplier && amount > 0) {
+    const { data: student } = await supabase
+      .from("students")
+      .select("active_job_multiplier")
+      .eq("id", studentId)
+      .single();
+
+    if (student && student.active_job_multiplier > 1) {
+      jobMultiplier = Number(student.active_job_multiplier);
+    }
+  }
+
+  const finalAmount = amount > 0
+    ? Math.floor(baseAmount * jobMultiplier * mystMult)
+    : amount; // Negative amounts (purchases) are not multiplied
+
   // Check negative balance setting if deducting
-  if (amount < 0) {
+  if (finalAmount < 0) {
     const { data: settings } = await supabase
       .from("economy_settings")
       .select("negative_balance")
@@ -44,8 +69,8 @@ export async function awardCoins({
         .eq("id", studentId)
         .single();
 
-      if (student && student.coin_balance + amount < 0) {
-        throw new InsufficientBalanceError(student.coin_balance, amount);
+      if (student && student.coin_balance + finalAmount < 0) {
+        throw new InsufficientBalanceError(student.coin_balance, finalAmount);
       }
     }
   }
@@ -53,7 +78,7 @@ export async function awardCoins({
   // Atomically update balance
   const { data: newBalance, error: rpcErr } = await supabase.rpc(
     "increment_coin_balance",
-    { p_student_id: studentId, p_amount: amount }
+    { p_student_id: studentId, p_amount: finalAmount }
   );
 
   if (rpcErr) throw new Error(`Failed to update balance: ${rpcErr.message}`);
@@ -64,7 +89,10 @@ export async function awardCoins({
     .insert({
       class_id: classId,
       student_id: studentId,
-      amount,
+      amount: finalAmount,
+      base_amount: baseAmount,
+      job_multiplier: jobMultiplier,
+      mystery_multiplier: mystMult,
       balance_after: newBalance as number,
       reason,
       category,
@@ -140,6 +168,7 @@ export async function processPurchase({
     reason: `Purchased: ${itemTitle}`,
     category: "purchase",
     sourceId: purchaseRequestId,
+    skipJobMultiplier: true,
   });
 }
 
@@ -166,6 +195,7 @@ export async function refundPurchase({
     reason: `Refund: ${itemTitle}`,
     category: "purchase_refund",
     sourceId: purchaseRequestId,
+    skipJobMultiplier: true,
   });
 }
 

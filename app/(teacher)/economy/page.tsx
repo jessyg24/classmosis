@@ -10,8 +10,13 @@ import { createClient } from "@/lib/supabase/client";
 import TransactionList from "@/components/economy/transaction-list";
 import StoreManager from "@/components/economy/store-manager";
 import PurchaseRequestsList from "@/components/economy/purchase-requests-list";
+import JobsManager from "@/components/economy/jobs-manager";
+import MysteryStudentPanel from "@/components/economy/mystery-student-panel";
+import TodosManager from "@/components/economy/todos-manager";
 import EconomySettingsForm from "@/components/economy/economy-settings-form";
 import AwardDialog from "@/components/economy/award-dialog";
+
+const tabStyle = "data-[state=active]:border-b-2 data-[state=active]:border-cm-amber data-[state=active]:text-cm-amber-dark rounded-none";
 
 export default function EconomyPage() {
   const { activeClassId } = useClassStore();
@@ -60,31 +65,14 @@ export default function EconomyPage() {
       {/* Tabs */}
       <Card className="bg-cm-surface rounded-cm-card border-cm-border">
         <Tabs defaultValue="transactions" className="w-full">
-          <TabsList className="w-full border-b border-cm-border rounded-none bg-transparent px-cm-4 pt-cm-2">
-            <TabsTrigger
-              value="transactions"
-              className="data-[state=active]:border-b-2 data-[state=active]:border-cm-amber data-[state=active]:text-cm-amber-dark rounded-none"
-            >
-              Transactions
-            </TabsTrigger>
-            <TabsTrigger
-              value="store"
-              className="data-[state=active]:border-b-2 data-[state=active]:border-cm-amber data-[state=active]:text-cm-amber-dark rounded-none"
-            >
-              Store
-            </TabsTrigger>
-            <TabsTrigger
-              value="requests"
-              className="data-[state=active]:border-b-2 data-[state=active]:border-cm-amber data-[state=active]:text-cm-amber-dark rounded-none"
-            >
-              Requests
-            </TabsTrigger>
-            <TabsTrigger
-              value="settings"
-              className="data-[state=active]:border-b-2 data-[state=active]:border-cm-amber data-[state=active]:text-cm-amber-dark rounded-none"
-            >
-              Settings
-            </TabsTrigger>
+          <TabsList className="w-full flex-wrap h-auto border-b border-cm-border rounded-none bg-transparent px-cm-4 pt-cm-2 gap-0">
+            <TabsTrigger value="transactions" className={tabStyle}>Transactions</TabsTrigger>
+            <TabsTrigger value="store" className={tabStyle}>Store</TabsTrigger>
+            <TabsTrigger value="requests" className={tabStyle}>Requests</TabsTrigger>
+            <TabsTrigger value="jobs" className={tabStyle}>Jobs</TabsTrigger>
+            <TabsTrigger value="mystery" className={tabStyle}>Mystery</TabsTrigger>
+            <TabsTrigger value="todos" className={tabStyle}>Todos</TabsTrigger>
+            <TabsTrigger value="settings" className={tabStyle}>Settings</TabsTrigger>
           </TabsList>
 
           <div className="p-cm-5">
@@ -98,6 +86,18 @@ export default function EconomyPage() {
 
             <TabsContent value="requests" className="mt-0">
               <PurchaseRequestsList classId={activeClassId} />
+            </TabsContent>
+
+            <TabsContent value="jobs" className="mt-0">
+              <JobsManager classId={activeClassId} />
+            </TabsContent>
+
+            <TabsContent value="mystery" className="mt-0">
+              <MysteryStudentPanel classId={activeClassId} />
+            </TabsContent>
+
+            <TabsContent value="todos" className="mt-0">
+              <TodosManager classId={activeClassId} />
             </TabsContent>
 
             <TabsContent value="settings" className="mt-0">

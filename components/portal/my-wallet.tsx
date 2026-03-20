@@ -19,6 +19,12 @@ interface WalletData {
     id: string;
     reward_store_items?: { title: string; icon: string };
   }>;
+  activeJob: { title: string; coin_multiplier: number } | null;
+  mysteryActive: boolean;
+  mysteryRevealed: boolean;
+  mysteryWinner: string | null;
+  mysteryIsMe: boolean;
+  mysteryBonus: number | null;
 }
 
 interface MyWalletProps {
@@ -79,6 +85,41 @@ export default function MyWallet({ studentId }: MyWalletProps) {
               {data.balance} {data.currencyName}
             </span>
           </div>
+
+          {/* Job badge */}
+          {data.activeJob && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-cm-amber-light rounded-cm-badge">
+              <span className="text-cm-caption text-cm-amber-dark font-medium">
+                {data.activeJob.title}
+              </span>
+              <span className="px-1.5 py-0.5 rounded-cm-badge bg-cm-amber text-white text-[10px] font-medium">
+                {data.activeJob.coin_multiplier}x
+              </span>
+            </div>
+          )}
+
+          {/* Mystery student status */}
+          {data.mysteryActive && !data.mysteryRevealed && (
+            <div className="px-3 py-2 bg-cm-purple-light rounded-cm-badge animate-pulse">
+              <p className="text-cm-caption text-cm-purple-dark font-medium">
+                🕵️ Mystery Student is watching today!
+              </p>
+            </div>
+          )}
+          {data.mysteryRevealed && data.mysteryIsMe && (
+            <div className="px-3 py-2 bg-cm-green-light rounded-cm-badge">
+              <p className="text-cm-caption text-cm-green-dark font-medium">
+                🎉 You were today&apos;s Mystery Student! +{data.mysteryBonus} bonus!
+              </p>
+            </div>
+          )}
+          {data.mysteryRevealed && !data.mysteryIsMe && data.mysteryWinner && (
+            <div className="px-3 py-2 bg-cm-white rounded-cm-badge">
+              <p className="text-cm-caption text-cm-text-hint">
+                Today&apos;s Mystery Student: {data.mysteryWinner}
+              </p>
+            </div>
+          )}
 
           {/* Pending purchases */}
           {data.pendingPurchases.length > 0 && (

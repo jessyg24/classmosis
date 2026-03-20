@@ -20,12 +20,23 @@ export async function GET(request: Request) {
     .eq("id", session.classId)
     .single();
 
-  // Get student balance
+  // Get student balance + job info
   const { data: student } = await supabase
     .from("students")
-    .select("coin_balance")
+    .select("coin_balance, active_job_id, active_job_multiplier")
     .eq("id", session.studentId)
     .single();
+
+  // Get active job details
+  let activeJob = null;
+  if (student?.active_job_id) {
+    const { data: job } = await supabase
+      .from("class_jobs")
+      .select("title, coin_multiplier")
+      .eq("id", student.active_job_id)
+      .single();
+    activeJob = job;
+  }
 
   // Recent transactions
   const { data: transactions } = await supabase
@@ -68,6 +79,31 @@ export async function GET(request: Request) {
     leaderboard = lb;
   }
 
+  // Mystery student status
+  const today = new Date().toISOString().split("T")[0];
+  const { data: mysteryRecord } = await supabase
+    .from("mystery_student_records")
+    .select("selected_student_id, revealed_at, bonus_payout, students:selected_student_id(display_name)")
+    .eq("class_id", session.classId)
+    .eq("date", today)
+    .maybeSingle();
+
+  const mysteryActive = !!mysteryRecord;
+  const mysteryRevealed = !!mysteryRecord?.revealed_at;
+  const mysteryIsMe = mysteryRecord?.selected_student_id === session.studentId && mysteryRevealed;
+  const mysteryWinner = mysteryRevealed
+    ? ((mysteryRecord?.students as unknown as { display_name: string })?.display_name || null)
+    : null;
+
+  // Active todos
+  const { data: todos } = await supabase
+    .from("todo_items")
+    .select("*")
+    .eq("student_id", session.studentId)
+    .eq("completed", false)
+    .order("due_date", { ascending: true, nullsFirst: false })
+    .limit(20);
+
   return NextResponse.json({
     balance: student?.coin_balance ?? 0,
     currencyName: cls?.currency_name ?? "coins",
@@ -76,5 +112,12 @@ export async function GET(request: Request) {
     storeItems: storeItems || [],
     pendingPurchases: pendingPurchases || [],
     leaderboard,
+    activeJob,
+    mysteryActive,
+    mysteryRevealed,
+    mysteryWinner,
+    mysteryIsMe,
+    mysteryBonus: mysteryIsMe ? mysteryRecord?.bonus_payout : null,
+    activeTodos: todos || [],
   });
 }

@@ -6,6 +6,9 @@ import type {
   RewardStoreItem,
   PurchaseRequest,
   EconomySettings,
+  ClassJob,
+  MysteryStudentRecord,
+  TodoItem,
 } from "@/types/database";
 
 // ── Transactions ─────────────────────────────────────────
@@ -199,5 +202,213 @@ export function useUpdateEconomySettings(classId: string | null) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["economy-settings", classId] });
     },
+  });
+}
+
+// ── Jobs ─────────────────────────────────────────────────
+
+export function useClassJobs(classId: string | null) {
+  return useQuery<ClassJob[]>({
+    queryKey: ["class-jobs", classId],
+    queryFn: async () => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/jobs`);
+      if (!res.ok) throw new Error("Failed to load jobs");
+      return res.json();
+    },
+    enabled: !!classId,
+  });
+}
+
+export function useCreateJob(classId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { title: string; description?: string; coin_multiplier?: number; rotation?: string }) => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/jobs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create job");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["class-jobs", classId] }); },
+  });
+}
+
+export function useAssignJob(classId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ jobId, studentId }: { jobId: string; studentId: string }) => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/jobs/${jobId}/assign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student_id: studentId }),
+      });
+      if (!res.ok) throw new Error("Failed to assign job");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["class-jobs", classId] }); },
+  });
+}
+
+export function useUnassignJob(classId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/jobs/${jobId}/assign`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to unassign job");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["class-jobs", classId] }); },
+  });
+}
+
+export function useRotateJobs(classId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/jobs/rotate`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to rotate jobs");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["class-jobs", classId] }); },
+  });
+}
+
+// ── Mystery Student ──────────────────────────────────────
+
+export function useTodayMystery(classId: string | null) {
+  return useQuery<MysteryStudentRecord | null>({
+    queryKey: ["mystery-today", classId],
+    queryFn: async () => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/mystery`);
+      if (!res.ok) throw new Error("Failed to load mystery");
+      return res.json();
+    },
+    enabled: !!classId,
+  });
+}
+
+export function useSelectMystery(classId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (multiplier?: number) => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/mystery`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ multiplier: multiplier || 3 }),
+      });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to select"); }
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["mystery-today", classId] }); },
+  });
+}
+
+export function useRevealMystery(classId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (teacherNote?: string) => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/mystery/reveal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teacher_note: teacherNote }),
+      });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to reveal"); }
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["mystery-today", classId] });
+      qc.invalidateQueries({ queryKey: ["economy-transactions", classId] });
+      qc.invalidateQueries({ queryKey: ["leaderboard", classId] });
+    },
+  });
+}
+
+export function useMysteryHistory(classId: string | null) {
+  return useQuery<MysteryStudentRecord[]>({
+    queryKey: ["mystery-history", classId],
+    queryFn: async () => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/mystery/history`);
+      if (!res.ok) throw new Error("Failed to load history");
+      return res.json();
+    },
+    enabled: !!classId,
+  });
+}
+
+// ── Todos ────────────────────────────────────────────────
+
+export function useClassTodos(classId: string | null, studentId?: string) {
+  return useQuery<TodoItem[]>({
+    queryKey: ["class-todos", classId, studentId],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (studentId) params.set("student_id", studentId);
+      params.set("completed", "false");
+      const res = await fetch(`/api/v1/classes/${classId}/economy/todos?${params}`);
+      if (!res.ok) throw new Error("Failed to load todos");
+      return res.json();
+    },
+    enabled: !!classId,
+  });
+}
+
+export function useCreateTodo(classId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { student_id: string; title: string; coin_eligible?: boolean; coins_on_complete?: number; due_date?: string }) => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/todos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create todo");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["class-todos", classId] }); },
+  });
+}
+
+export function useCompleteTodo(classId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (todoId: string) => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/todos/${todoId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: true }),
+      });
+      if (!res.ok) throw new Error("Failed to complete todo");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["class-todos", classId] });
+      qc.invalidateQueries({ queryKey: ["economy-transactions", classId] });
+    },
+  });
+}
+
+export function useDeleteTodo(classId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (todoId: string) => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/todos/${todoId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete todo");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["class-todos", classId] }); },
+  });
+}
+
+export function useFulfillPurchase(classId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (purchaseId: string) => {
+      const res = await fetch(`/api/v1/classes/${classId}/economy/purchases/${purchaseId}/fulfill`, { method: "PUT" });
+      if (!res.ok) throw new Error("Failed to fulfill");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["purchase-requests", classId] }); },
   });
 }
