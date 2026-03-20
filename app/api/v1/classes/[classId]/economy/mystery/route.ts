@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod/v4";
 import { selectMysteryStudent, getTodayMystery } from "@/lib/economy";
+import { checkFeatureAccess } from "@/lib/subscription";
 
 const selectSchema = z.object({
   multiplier: z.number().min(1).max(10).default(3),
@@ -30,6 +31,9 @@ export async function POST(
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const access = await checkFeatureAccess(supabase, user.id, 'mystery_student');
+  if (!access.allowed) return NextResponse.json({ error: "Pro feature", upgrade: true }, { status: 403 });
 
   const body = await request.json().catch(() => ({}));
   const parsed = selectSchema.safeParse(body);

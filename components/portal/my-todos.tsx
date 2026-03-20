@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ClipboardList, Check, Plus } from "lucide-react";
@@ -38,18 +38,18 @@ export default function MyTodos({ studentId }: MyTodosProps) {
     return headers;
   };
 
-  const fetchTodos = () => {
+  const fetchTodos = useCallback(() => {
     fetch("/api/v1/student/todos", { headers: getHeaders() })
       .then((res) => (res.ok ? res.json() : []))
       .then((d) => setTodos(d))
       .catch(() => setTodos([]))
       .finally(() => setLoading(false));
-  };
+  }, []);
 
   useEffect(() => {
     if (!studentId) return;
     fetchTodos();
-  }, [studentId]);
+  }, [studentId, fetchTodos]);
 
   const handleComplete = async (todoId: string) => {
     try {

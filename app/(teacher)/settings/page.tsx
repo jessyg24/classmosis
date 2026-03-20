@@ -8,8 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
-import type { Class, Subject, GradeBand } from "@/types/database";
+import { Plus, Sparkles } from "lucide-react";
+import type { Class, Subject, GradeBand, Subscription } from "@/types/database";
 
 const subjects: Subject[] = ["ELA", "Math", "Science", "Social Studies", "Multi-subject", "Other"];
 const gradeBands: GradeBand[] = ["K-2", "3-5", "6-8"];
@@ -33,6 +33,8 @@ export default function SettingsPage() {
   const [newSubject, setNewSubject] = useState<Subject>("ELA");
   const [newGradeBand, setNewGradeBand] = useState<GradeBand>("K-2");
   const [creating, setCreating] = useState(false);
+  const [subscription, setSubscription] = useState<Partial<Subscription> | null>(null);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   const loadClass = useCallback(async () => {
     if (!activeClassId) return;
@@ -57,6 +59,14 @@ export default function SettingsPage() {
   useEffect(() => {
     loadClass();
   }, [loadClass]);
+
+  // Load subscription
+  useEffect(() => {
+    fetch("/api/v1/billing")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setSubscription(data))
+      .catch(() => {});
+  }, []);
 
   const handleSave = async () => {
     if (!activeClassId) return;
@@ -210,6 +220,100 @@ export default function SettingsPage() {
             Archive class
           </Button>
         </div>
+      </Card>
+
+      {/* Billing */}
+      <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-cm-3">
+            <Sparkles className="h-5 w-5 text-cm-teal" />
+            <h2 className="text-cm-label text-cm-text-primary">Subscription</h2>
+          </div>
+          <span className={`px-2 py-0.5 rounded-cm-badge text-cm-overline font-medium ${
+            subscription?.tier === "pro"
+              ? "bg-cm-teal-light text-cm-teal-dark"
+              : "bg-cm-white text-cm-text-hint border border-cm-border"
+          }`}>
+            {subscription?.tier === "pro" ? "Pro" : "Free"}
+          </span>
+        </div>
+
+        {subscription?.tier === "pro" ? (
+          <div className="space-y-3">
+            <p className="text-cm-body text-cm-text-secondary">
+              You&apos;re on the Pro plan.
+              {subscription.billing_interval && ` Billed ${subscription.billing_interval}ly.`}
+              {subscription.current_period_end && ` Next billing: ${new Date(subscription.current_period_end).toLocaleDateString()}.`}
+            </p>
+            {subscription.cancel_at_period_end && (
+              <p className="text-cm-caption text-cm-amber bg-cm-amber-light px-3 py-2 rounded-cm-button">
+                Your subscription will cancel at the end of the current period.
+              </p>
+            )}
+            <Button
+              onClick={async () => {
+                setBillingLoading(true);
+                try {
+                  const res = await fetch("/api/v1/billing/portal", { method: "POST" });
+                  const data = await res.json();
+                  if (data.url) window.location.href = data.url;
+                } catch {} finally { setBillingLoading(false); }
+              }}
+              disabled={billingLoading}
+              variant="outline"
+              className="rounded-cm-button"
+            >
+              {billingLoading ? "Loading..." : "Manage Subscription"}
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-cm-body text-cm-text-secondary">
+              Upgrade to Pro for AI grading, unlimited classes, parent portal, advanced economy, and more.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                onClick={async () => {
+                  setBillingLoading(true);
+                  try {
+                    const priceId = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID || "pro_monthly";
+                    const res = await fetch("/api/v1/billing/checkout", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ price_id: priceId }),
+                    });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                  } catch {} finally { setBillingLoading(false); }
+                }}
+                disabled={billingLoading}
+                className="bg-cm-teal hover:bg-cm-teal-dark text-white rounded-cm-button"
+              >
+                {billingLoading ? "Loading..." : "Upgrade to Pro — $19.99/mo"}
+              </Button>
+              <Button
+                onClick={async () => {
+                  setBillingLoading(true);
+                  try {
+                    const priceId = process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID || "pro_annual";
+                    const res = await fetch("/api/v1/billing/checkout", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ price_id: priceId }),
+                    });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                  } catch {} finally { setBillingLoading(false); }
+                }}
+                disabled={billingLoading}
+                variant="outline"
+                className="rounded-cm-button border-cm-teal text-cm-teal"
+              >
+                $119/year (save 50%)
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Create Class Dialog */}

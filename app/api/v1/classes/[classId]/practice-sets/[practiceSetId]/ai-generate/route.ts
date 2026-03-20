@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod/v4";
 import { generatePracticeProblems, checkAndIncrementUsage, AiError } from "@/lib/anthropic";
+import { checkFeatureAccess } from "@/lib/subscription";
 
 const generateSchema = z.object({
   count: z.number().int().min(1).max(10).default(5),
@@ -21,6 +22,9 @@ export async function POST(
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const access = await checkFeatureAccess(supabase, user.id, 'ai_practice_gen');
+  if (!access.allowed) return NextResponse.json({ error: "Pro feature", upgrade: true }, { status: 403 });
 
   // Rate limit
   const usage = await checkAndIncrementUsage(supabase, user.id, params.classId, "practice_gen");

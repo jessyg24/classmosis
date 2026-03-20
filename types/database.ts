@@ -593,6 +593,31 @@ export interface ParentGuardian {
   student?: Pick<Student, "id" | "display_name" | "coin_balance" | "streak_count">;
 }
 
+// ============================================================
+// Subscription / Billing Types (Sprint 7)
+// ============================================================
+
+export type SubscriptionTier = "free" | "pro";
+export type SubscriptionStatus = "active" | "trialing" | "past_due" | "canceled" | "unpaid" | "incomplete";
+export type BillingInterval = "month" | "year";
+
+export interface Subscription {
+  id: string;
+  teacher_id: string;
+  tier: SubscriptionTier;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_price_id: string | null;
+  status: SubscriptionStatus;
+  billing_interval: BillingInterval | null;
+  trial_ends_at: string | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Teacher profile (extends Supabase auth.users via user_metadata)
 export interface TeacherProfile {
   id: string;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateGradeDraft, checkAndIncrementUsage, AiError } from "@/lib/anthropic";
+import { checkFeatureAccess } from "@/lib/subscription";
 
 export async function GET(
   _request: Request,
@@ -28,6 +29,9 @@ export async function POST(
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const access = await checkFeatureAccess(supabase, user.id, 'ai_grading');
+  if (!access.allowed) return NextResponse.json({ error: "Pro feature", upgrade: true }, { status: 403 });
 
   // Rate limit check
   const usage = await checkAndIncrementUsage(supabase, user.id, params.classId, "grading");
