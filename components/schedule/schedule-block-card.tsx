@@ -14,7 +14,9 @@ import {
   formatTime,
   DEFAULT_START_HOUR,
   DEFAULT_START_MINUTE,
+  type WoodColor,
 } from "@/types/schedule";
+import { getBlockDef } from "@/types/block-catalog";
 import type { Block } from "@/types/database";
 import { useScheduleStore } from "@/stores/schedule-store";
 import SortableInsertChip from "./sortable-insert-chip";
@@ -27,8 +29,14 @@ interface Props {
 export default function ScheduleBlockCard({ block, cumulativeMinutesBefore }: Props) {
   const { activeBlockId, activeInsertId, setActiveBlock, removeBlock } = useScheduleStore();
   const config = BLOCK_COLORS[block.type] || { color: "bg-cm-teal", light: "bg-cm-teal-light", dark: "text-cm-teal-dark", label: block.type, defaultLabel: block.label, defaultDuration: 30 };
-  const woodColor = BLOCK_TYPE_WOOD[block.type] || (block.category === "core_academic" ? "blue" : block.category === "electives_specials" ? "pink" : block.category === "non_instructional" ? "amber" : block.category === "social_emotional" ? "teal" : block.category === "support_intervention" ? "purple" : "coral");
-  const wood = BLOCK_WOOD[woodColor as keyof typeof BLOCK_WOOD] || BLOCK_WOOD.teal;
+  // Resolve wood color: catalog defaultColor > BLOCK_TYPE_WOOD map > fallback
+  const catalogDef = getBlockDef(block.type);
+  const woodColor: WoodColor = (
+    BLOCK_TYPE_WOOD[block.type]
+    || (catalogDef.defaultColor as WoodColor)
+    || "teal"
+  );
+  const wood = BLOCK_WOOD[woodColor] || BLOCK_WOOD.teal;
   const isActive = activeBlockId === block.id;
   const hasInserts = block.inserts && block.inserts.length > 0;
 

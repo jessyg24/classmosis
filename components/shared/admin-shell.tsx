@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
+  Settings,
+  LayoutGrid,
+  Library,
+  Target,
   Users,
   School,
   Calendar,
-  BookOpen,
   Coins,
-  Brain,
-  Target,
   CreditCard,
   LogOut,
   Shield,
@@ -20,14 +21,15 @@ import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin/catalog", label: "Catalog", icon: LayoutGrid },
+  { href: "/admin/content", label: "Content", icon: Library },
+  { href: "/admin/standards", label: "Standards", icon: Target },
   { href: "/admin/teachers", label: "Teachers", icon: Users },
   { href: "/admin/classes", label: "Classes", icon: School },
   { href: "/admin/schedules", label: "Schedules", icon: Calendar },
-  { href: "/admin/gradebook", label: "Gradebook", icon: BookOpen },
   { href: "/admin/economy", label: "Economy", icon: Coins },
-  { href: "/admin/practice", label: "Practice", icon: Brain },
-  { href: "/admin/standards", label: "Standards", icon: Target },
-  { href: "/admin/subscriptions", label: "Billing", icon: CreditCard },
+  { href: "/admin/billing", label: "Billing", icon: CreditCard },
 ];
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {

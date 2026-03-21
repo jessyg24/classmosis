@@ -13,6 +13,7 @@ import {
 import type { TimerBehavior } from "@/types/database";
 import { Settings2, ChevronLeft, Trash2 } from "lucide-react";
 import { getInsertIcon } from "./wood-block";
+import InsertSettingsForm from "./insert-settings-form";
 
 const BLOCK_TYPE_OPTIONS: BlockType[] = [
   "routine",
@@ -163,6 +164,11 @@ export default function BlockProperties() {
             <p className="text-[10px] text-cm-text-hint mt-1">
               Leave blank to auto-divide parent block time
             </p>
+          </div>
+
+          {/* Type-specific settings */}
+          <div className="border-t border-cm-border pt-cm-4">
+            <InsertSettingsForm insert={insert} blockId={block.id} />
           </div>
         </div>
       </aside>

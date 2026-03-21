@@ -37,6 +37,7 @@ import {
 import type { Block, DayType, Insert } from "@/types/database";
 import { INSERT_CONFIG, type InsertType } from "@/types/schedule";
 import { getBlockDef } from "@/types/block-catalog";
+import { getSubRoutineDef } from "@/types/subroutine-catalog";
 import { InsertPaletteChip, WoodInsertChip } from "@/components/schedule/wood-block";
 
 export default function SchedulePage() {
@@ -291,11 +292,12 @@ export default function SchedulePage() {
       if (!targetBlockId) return;
 
       const config = INSERT_CONFIG[insertType];
+      const subDef = !config ? getSubRoutineDef(insertType) : null;
       const newInsert: Insert = {
         id: crypto.randomUUID(),
         type: insertType,
-        label: config.defaultLabel,
-        duration_minutes: config.defaultDuration,
+        label: config?.defaultLabel || subDef?.label || insertType,
+        duration_minutes: config?.defaultDuration ?? subDef?.defaultDurationMin ?? null,
         order_index: 0,
         settings: null,
       };

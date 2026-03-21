@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function SortableInsertChip({ insert, index, blockId, isActive }: Props) {
-  const { setActiveBlock, setActiveInsert } = useScheduleStore();
+  const { setActiveBlock, setActiveInsert, removeInsert } = useScheduleStore();
 
   const {
     attributes,
@@ -47,6 +47,7 @@ export default function SortableInsertChip({ insert, index, blockId, isActive }:
         setActiveBlock(blockId);
         setActiveInsert(insert.id);
       }}
+      onDelete={() => removeInsert(blockId, insert.id)}
     />
   );
 }

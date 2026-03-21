@@ -70,13 +70,14 @@ interface WoodInsertChipProps {
   index: number;
   isActive?: boolean;
   onClick?: () => void;
+  onDelete?: () => void;
   dragHandleProps?: Record<string, unknown>;
   style?: CSSProperties;
   className?: string;
 }
 
 export const WoodInsertChip = forwardRef<HTMLDivElement, WoodInsertChipProps>(
-  function WoodInsertChip({ insert, index, isActive, onClick, dragHandleProps, style: externalStyle, className = "" }, ref) {
+  function WoodInsertChip({ insert, index, isActive, onClick, onDelete, dragHandleProps, style: externalStyle, className = "" }, ref) {
     const { style: woodStyle, dark } = getInsertWoodStyle(index);
     const config = INSERT_CONFIG[insert.type as InsertType];
     const subDef = !config ? getSubRoutineDef(insert.type) : null;
@@ -113,6 +114,16 @@ export const WoodInsertChip = forwardRef<HTMLDivElement, WoodInsertChipProps>(
           <span className="relative text-[10px] text-white/50">
             {insert.duration_minutes}m
           </span>
+        )}
+        {onDelete && (
+          <button
+            className="relative shrink-0 opacity-0 group-hover/insert:opacity-100 text-white/40 hover:text-white transition-opacity ml-0.5"
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          >
+            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         )}
       </div>
     );
