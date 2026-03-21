@@ -21,11 +21,13 @@ export default async function TeacherLayout({
     .order("created_at", { ascending: true });
 
   const teacherName = user.user_metadata?.display_name || user.email || "Teacher";
+  const isAdmin = user.email === process.env.SUPER_ADMIN_EMAIL;
 
   return (
     <AppShellWrapper
       teacherName={teacherName}
       classes={classes || []}
+      isAdmin={isAdmin}
     >
       {children}
     </AppShellWrapper>

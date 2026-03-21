@@ -8,10 +8,12 @@ export default function AppShellWrapper({
   children,
   teacherName,
   classes,
+  isAdmin,
 }: {
   children: React.ReactNode;
   teacherName: string;
   classes: Array<{ id: string; name: string }>;
+  isAdmin?: boolean;
 }) {
   const { activeClassId, setActiveClassId } = useClassStore();
 
@@ -23,7 +25,7 @@ export default function AppShellWrapper({
   }, [activeClassId, classes, setActiveClassId]);
 
   return (
-    <AppShell teacherName={teacherName} classes={classes}>
+    <AppShell teacherName={teacherName} classes={classes} isAdmin={isAdmin}>
       {children}
     </AppShell>
   );

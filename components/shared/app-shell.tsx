@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,10 +41,12 @@ export default function AppShell({
   children,
   teacherName,
   classes,
+  isAdmin,
 }: {
   children: React.ReactNode;
   teacherName: string;
   classes: Array<{ id: string; name: string }>;
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -120,6 +123,19 @@ export default function AppShell({
             );
           })}
         </nav>
+
+        {/* Admin toggle — only visible for super admin */}
+        {isAdmin && (
+          <div className="px-cm-3 pb-cm-2">
+            <Link
+              href="/admin"
+              className="flex items-center gap-cm-2 px-cm-3 py-cm-2 rounded-cm-button text-cm-caption font-medium bg-[#1A1D23] text-white/80 hover:text-white transition-colors"
+            >
+              <Shield className="h-3.5 w-3.5 text-cm-coral" />
+              Admin Panel
+            </Link>
+          </div>
+        )}
 
         {/* User section */}
         <div className="p-cm-4 border-t border-cm-border">
