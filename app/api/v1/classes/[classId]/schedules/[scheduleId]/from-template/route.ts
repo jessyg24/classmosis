@@ -64,6 +64,11 @@ export async function POST(
     economy_trigger?: unknown;
     visible_to_students?: boolean;
     inserts?: unknown[];
+    is_instructional?: boolean;
+    non_instructional_message?: string | null;
+    subject_description?: string | null;
+    student_view_settings?: unknown;
+    category?: string | null;
   }>;
 
   let cumulativeMinutes = DEFAULT_START_HOUR * 60 + DEFAULT_START_MINUTE;
@@ -88,6 +93,11 @@ export async function POST(
       economy_trigger: b.economy_trigger || null,
       visible_to_students: b.visible_to_students ?? true,
       inserts: b.inserts || [],
+      is_instructional: b.is_instructional ?? true,
+      non_instructional_message: b.non_instructional_message || null,
+      subject_description: b.subject_description || null,
+      student_view_settings: b.student_view_settings || { show_sub_routines_in_full_day: true, student_can_see_ahead: "all", full_day_view_available: true },
+      category: b.category || null,
     };
   });
 

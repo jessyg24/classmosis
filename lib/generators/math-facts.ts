@@ -275,7 +275,7 @@ export function generateMathWorksheet(config: MathFactsConfig): GeneratedWorkshe
   }
 
   // Build title from operations
-  const opNames = [...new Set(config.operations)].map((op) => OP_TITLES[op]);
+  const opNames = Array.from(new Set(config.operations)).map((op) => OP_TITLES[op]);
   const title = opNames.length === 1
     ? `${opNames[0]} Practice`
     : `Mixed Practice: ${opNames.join(", ")}`;
