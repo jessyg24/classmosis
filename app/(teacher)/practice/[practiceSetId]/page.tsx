@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, Sparkles } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { OsmoBadge } from "@/components/shared/osmo";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -67,8 +68,8 @@ export default function PracticeSetDetailPage() {
             variant="outline"
             className="border-cm-pink text-cm-pink hover:bg-cm-pink-light rounded-cm-button"
           >
-            <Sparkles className="h-4 w-4 mr-1" />
-            AI Generate
+            <OsmoBadge size={16} />
+            Ask Osmo
           </Button>
           <Button
             onClick={() => setAddOpen(true)}

@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, CreditCard } from "lucide-react";
 import type { Class, Subject, GradeBand, Subscription } from "@/types/database";
 
 const subjects: Subject[] = ["ELA", "Math", "Science", "Social Studies", "Multi-subject", "Other"];
@@ -226,7 +226,7 @@ export default function SettingsPage() {
       <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-cm-3">
-            <Sparkles className="h-5 w-5 text-cm-teal" />
+            <CreditCard className="h-5 w-5 text-cm-teal" />
             <h2 className="text-cm-label text-cm-text-primary">Subscription</h2>
           </div>
           <span className={`px-2 py-0.5 rounded-cm-badge text-cm-overline font-medium ${

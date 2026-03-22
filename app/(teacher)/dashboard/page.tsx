@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useClassStore } from "@/stores/class-store";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, BookOpen, Sparkles, Copy, Check, Calendar, Target, Coins } from "lucide-react";
+import { Users, BookOpen, Copy, Check, Calendar, Target, Coins, KeyRound } from "lucide-react";
+import Osmo from "@/components/shared/osmo";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
 import { useMorningBrief } from "@/hooks/use-ai";
@@ -221,7 +222,7 @@ export default function DashboardPage() {
         <Card className="p-cm-5 bg-cm-surface rounded-cm-card border-cm-border">
           <div className="flex items-center gap-cm-3">
             <div className="w-10 h-10 bg-cm-amber-light rounded-cm-button flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-cm-amber" />
+              <KeyRound className="h-5 w-5 text-cm-amber" />
             </div>
             <div>
               <p className="text-cm-caption text-cm-text-hint uppercase tracking-wider">
@@ -344,19 +345,17 @@ export default function DashboardPage() {
       {/* Morning Brief */}
       <Card className="p-cm-6 bg-cm-surface rounded-cm-card border-cm-border">
         <div className="flex items-start gap-cm-3">
-          <div className="w-10 h-10 bg-cm-pink-light rounded-cm-button flex items-center justify-center shrink-0">
-            <Sparkles className="h-5 w-5 text-cm-pink" />
-          </div>
+          <Osmo size={40} />
           <div>
-            <h2 className="text-cm-label text-cm-text-primary">Morning Brief</h2>
+            <h2 className="text-cm-label text-cm-text-primary">Osmo&apos;s Morning Brief</h2>
             {morningBrief?.brief ? (
               <p className="text-cm-body text-cm-text-secondary mt-1 whitespace-pre-line">
                 {morningBrief.brief}
               </p>
             ) : (
               <p className="text-cm-body text-cm-text-secondary mt-1">
-                Your AI-powered morning brief will appear here once you add your
-                Anthropic API key and start tracking assignments, grades, and student progress.
+                Osmo will share your morning brief here once you start tracking
+                assignments, grades, and student progress.
               </p>
             )}
           </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Sparkles } from "lucide-react";
+import Osmo from "@/components/shared/osmo";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -80,8 +80,8 @@ export default function AiQuestionGenerator({ open, onOpenChange, classId, pract
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-cm-pink" />
-            AI Generate Questions
+            <Osmo size={24} />
+            Osmo — Generate Questions
           </DialogTitle>
         </DialogHeader>
 
@@ -161,8 +161,8 @@ export default function AiQuestionGenerator({ open, onOpenChange, classId, pract
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Generate
+                  <Osmo size={16} />
+                  Ask Osmo
                 </span>
               )}
             </Button>

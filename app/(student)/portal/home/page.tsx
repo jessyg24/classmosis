@@ -12,6 +12,7 @@ import MyPractice from "@/components/portal/my-practice";
 import MyTodos from "@/components/portal/my-todos";
 import MyWallet from "@/components/portal/my-wallet";
 import MyEvents from "@/components/portal/my-events";
+import OsmoHelp from "@/components/portal/osmo-help";
 import type { Block } from "@/types/database";
 
 interface StudentData {
@@ -128,6 +129,7 @@ export default function PortalHomePage() {
         {/* My Wallet */}
         <MyWallet studentId={student.id} />
       </div>
+      <OsmoHelp />
     </PortalShell>
   );
 }
