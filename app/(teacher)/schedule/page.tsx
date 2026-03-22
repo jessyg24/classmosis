@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   DndContext,
   DragOverlay,
+  useDroppable,
   rectIntersection,
   pointerWithin,
   PointerSensor,
@@ -26,6 +27,7 @@ import {
   Save,
   Rocket,
   BookmarkPlus,
+  Trash2,
   FolderOpen,
   Loader2,
 } from "lucide-react";
@@ -39,6 +41,25 @@ import { INSERT_CONFIG, type InsertType } from "@/types/schedule";
 import { getBlockDef } from "@/types/block-catalog";
 import { getSubRoutineDef } from "@/types/subroutine-catalog";
 import { InsertPaletteChip, WoodInsertChip } from "@/components/schedule/wood-block";
+
+function TrashZone() {
+  const { isOver, setNodeRef } = useDroppable({ id: "trash-zone" });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 rounded-cm-button border-2 border-dashed transition-all z-40 ${
+        isOver
+          ? "border-cm-coral bg-cm-coral-light scale-110 shadow-lg"
+          : "border-cm-border bg-cm-surface/80 backdrop-blur"
+      }`}
+    >
+      <Trash2 className={`h-5 w-5 ${isOver ? "text-cm-coral" : "text-cm-text-hint"}`} />
+      <span className={`text-cm-caption font-medium ${isOver ? "text-cm-coral-dark" : "text-cm-text-hint"}`}>
+        {isOver ? "Drop to remove" : "Drag here to remove"}
+      </span>
+    </div>
+  );
+}
 
 export default function SchedulePage() {
   const { activeClassId } = useClassStore();
@@ -54,6 +75,7 @@ export default function SchedulePage() {
     setScheduleId,
     setBlocks,
     addBlock,
+    removeBlock,
     reorderBlocks,
     setDayType,
     markClean,
@@ -105,15 +127,7 @@ export default function SchedulePage() {
     loadSchedule();
   }, [loadSchedule]);
 
-  // Auto-save every 30 seconds when dirty
-  useEffect(() => {
-    if (!isDirty || !activeClassId || !scheduleId) return;
-    const timer = setInterval(() => {
-      handleSave();
-    }, 30_000);
-    return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDirty, activeClassId, scheduleId]);
+  // Manual save only — no auto-save (user requested)
 
   // Load templates
   useEffect(() => {
@@ -155,7 +169,10 @@ export default function SchedulePage() {
         toast.error(data.error || "Failed to save");
         return;
       }
-      setBlocks(data.blocks);
+      // Only update blocks from server if we got a valid response with blocks
+      if (data.blocks && data.blocks.length > 0) {
+        setBlocks(data.blocks);
+      }
       markClean();
       toast.success("Schedule saved");
     } catch {
@@ -252,6 +269,17 @@ export default function SchedulePage() {
     const activeData = active.data.current;
     const overData = over.data.current;
     const overId = String(over.id);
+
+    // ─── 0. Drop on trash → delete block ────────────────────
+    if (overId === "trash-zone") {
+      const blockId = String(active.id);
+      // Only delete if it's an existing block on canvas (not from library)
+      if (!activeData?.fromLibrary && !activeData?.fromInsertLibrary) {
+        removeBlock(blockId);
+        toast.success("Block removed");
+      }
+      return;
+    }
 
     // ─── 1. Block library → canvas ──────────────────────────
     if (activeData?.fromLibrary) {
@@ -595,6 +623,7 @@ export default function SchedulePage() {
             <DayCanvas />
             <BlockProperties />
           </div>
+          {dragActiveId && <TrashZone />}
           <DragOverlay dropAnimation={null}>
             {getDragOverlayContent()}
           </DragOverlay>
