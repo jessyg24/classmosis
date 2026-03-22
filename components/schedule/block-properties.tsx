@@ -192,7 +192,7 @@ export default function BlockProperties() {
           style={{ backgroundColor: wood.base }}
         />
         <h2 className="text-cm-overline text-cm-text-hint uppercase">
-          {BLOCK_COLORS[block.type].label} Block
+          {(BLOCK_COLORS[block.type]?.label || block.label || block.type)} Block
         </h2>
       </div>
 

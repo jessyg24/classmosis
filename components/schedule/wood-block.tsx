@@ -51,15 +51,36 @@ export function getWoodStyle(color: WoodColor): CSSProperties {
   };
 }
 
-export function getInsertWoodStyle(index: number): { style: CSSProperties; dark: string } {
-  const ic = INSERT_WOOD_COLORS[index % INSERT_WOOD_COLORS.length];
+// Category-based stable colors for sub-routines (don't change on reorder)
+const SUBROUTINE_CATEGORY_COLORS: Record<string, { base: string; dark: string }> = {
+  instruction: { base: "#5A8FCC", dark: "#4A7AB5" },   // blue
+  practice: { base: "#3D9E7A", dark: "#2D8868" },      // teal
+  discussion_sharing: { base: "#7B5FB5", dark: "#6A4DA0" }, // purple
+  assessment: { base: "#C4923A", dark: "#B07E2A" },     // amber
+  routine: { base: "#6BA050", dark: "#5A8D40" },        // green
+  economy: { base: "#D4764E", dark: "#C0623A" },        // coral
+  special: { base: "#A85A7A", dark: "#944668" },        // pink
+};
+
+const DEFAULT_INSERT_COLOR = { base: "#A39070", dark: "#8E7A5A" }; // walnut fallback
+
+export function getInsertWoodStyle(index: number, type?: string): { style: CSSProperties; dark: string } {
+  // If type is provided, use category-based stable color
+  let color = DEFAULT_INSERT_COLOR;
+  if (type) {
+    const subDef = getSubRoutineDef(type);
+    color = SUBROUTINE_CATEGORY_COLORS[subDef.category] || DEFAULT_INSERT_COLOR;
+  } else {
+    // Legacy fallback: position-based
+    color = INSERT_WOOD_COLORS[index % INSERT_WOOD_COLORS.length];
+  }
   return {
     style: {
-      backgroundColor: ic.base,
+      backgroundColor: color.base,
       backgroundImage: woodGrain("rgba(0,0,0,0.07)"),
       borderRadius: "3px",
     },
-    dark: ic.dark,
+    dark: color.dark,
   };
 }
 
@@ -78,7 +99,7 @@ interface WoodInsertChipProps {
 
 export const WoodInsertChip = forwardRef<HTMLDivElement, WoodInsertChipProps>(
   function WoodInsertChip({ insert, index, isActive, onClick, onDelete, dragHandleProps, style: externalStyle, className = "" }, ref) {
-    const { style: woodStyle, dark } = getInsertWoodStyle(index);
+    const { style: woodStyle, dark } = getInsertWoodStyle(index, insert.type);
     const config = INSERT_CONFIG[insert.type as InsertType];
     const subDef = !config ? getSubRoutineDef(insert.type) : null;
     const IconComp = getInsertIcon(config?.icon || subDef?.icon || "book-open");
@@ -143,7 +164,7 @@ interface InsertPaletteChipProps {
 export function InsertPaletteChip({ type, index, dragRef, dragProps, isDragging }: InsertPaletteChipProps) {
   const config = INSERT_CONFIG[type];
   const subDef = !config ? getSubRoutineDef(type) : null;
-  const { style: woodStyle, dark } = getInsertWoodStyle(index);
+  const { style: woodStyle, dark } = getInsertWoodStyle(index, type);
   const IconComp = getInsertIcon(config?.icon || subDef?.icon || "book-open");
   const label = config?.label || subDef?.label || type;
 
